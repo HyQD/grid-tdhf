@@ -1,7 +1,7 @@
 import importlib
 
 
-def setup_laser(inputs, imaginary=False):
+def setup_integrataor(inputs, imaginary=False):
     integrator_class = inputs.integrator
     gauge = inputs.gauge
 
