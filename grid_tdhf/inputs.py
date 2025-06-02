@@ -195,7 +195,7 @@ def parse_arguments(verbose=True):
         help="",
     )
     parser.add_argument(
-        "-laser_class",
+        "-laser",
         type=str,
         default="SineSquareLaser",
         help="",
