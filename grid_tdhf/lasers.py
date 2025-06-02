@@ -17,11 +17,14 @@ class SineSquareLaser:
         self._A1_t0 = self._A1(0)
 
         if gauge == "length":
-            self.__call__ = self.electric_field
+            self._callable = self.electric_field
         elif gauge == "velocity":
-            self.__call__ = self.vector_potential
+            self._callable = self.vector_potential
         else:
             raise ValueError(f"Gauge '{gauge}' is not supported.")
+
+    def __call__(self, t):
+        return self._callable(t)
 
     def _phase(self, t):
         if callable(self.phase):
@@ -36,7 +39,7 @@ class SineSquareLaser:
             * np.heaviside(dt, 1.0)
             * np.heaviside(self.tprime - dt, 1.0)
             * np.sin(self.omega * dt + self._phase(dt))
-            * self.field_strength
+            * self.E0
         )
         return pulse
 
@@ -44,7 +47,7 @@ class SineSquareLaser:
         dt = t - self.t0
 
         pulse = (
-            self.field_strength
+            self.E0
             * (self._A1(dt) - self._A1_t0)
             * np.heaviside(dt, 1.0)
             * np.heaviside(self.tprime - dt, 1.0)
@@ -84,11 +87,14 @@ class TrapezoidalLaser:
         self.T2 = 2 * (ncycles - ncycles_ramp) * np.pi / omega
 
         if gauge == "length":
-            self.__call__ = self.electric_field
+            self._callable = self.electric_field
         elif gauge == "velocity":
-            self.__call__ = self.vector_potential
+            self._callable = self.vector_potential
         else:
             raise ValueError(f"Gauge '{gauge}' is not supported.")
+
+    def __call__(self, t):
+        return self._callable(t)
 
     def electric_field(self, t):
         dt = t - self.t0
@@ -147,9 +153,12 @@ class DiscreteDeltaPulse:
         self.t0 = t0
 
         if gauge == "length":
-            self.__call__ = self.electric_field
+            self._callable = self.electric_field
         else:
             raise ValueError(f"Gauge '{gauge}' is not supported.")
+
+    def __call__(self, t):
+        return self._callable(t)
 
     def electric_field(self, t):
         dt = t - self.t0
