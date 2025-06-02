@@ -9,7 +9,7 @@ from grid_tdhf.properties import compute_norm
 from sympy.physics.quantum.cg import Wigner3j
 
 
-REQUIRED_SCF_KEYS_notfinishedyet = [
+REQUIRED_SCF_PARAMS_notfinishedyet = [
     "H_core_electron",
     "H_core_positron",
     "poisson_inverse",
@@ -858,7 +858,7 @@ def init_guess_PsCl(
     return u_in
 
 
-REQUIRED_SCF_KEYS = [
+REQUIRED_SCF_PARAMS = [
     "atom",
     "H_core_electron",
     "H_core_positron",

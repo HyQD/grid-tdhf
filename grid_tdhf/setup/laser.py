@@ -5,7 +5,7 @@ def setup_laser(inputs):
     laser_class = inputs.laser
     gauge = inputs.gauge
 
-    params = dict(vars(inputs))
+    params = {**vars(inputs)}
 
     module = importlib.import_module("grid_tdhf.lasers")
     Laser = getattr(module, laser_class)

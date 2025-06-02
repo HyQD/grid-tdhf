@@ -3,11 +3,11 @@ from opt_einsum import contract
 
 
 class PotentialComputer:
-    def __init__(self, inputs, system_info, aux_arrays, rme):
+    def __init__(self, inputs, system_info, radial_arrays, aux_arrays):
         self.inputs = inputs
         self.system_info = system_info
+        self.radial_arrays = radial_arrays
         self.aux_arrays = aux_arrays
-        self.rme = rme
 
         self.u = None
         self.V_d_electron = None
@@ -56,7 +56,7 @@ class PotentialComputer:
         poisson_inverse = self.aux_arrays.poisson_inverse
         gaunt_dict = self.aux_arrays.gaunt_dict
 
-        nr = self.rme.nr
+        nr = self.radial_arrays.nr
 
         self.V_d_electron = {
             m: np.zeros((nl, nl, nr), dtype=np.complex128)
@@ -111,7 +111,7 @@ class PotentialComputer:
         n_orbs = self.system_info.n_orbs
         m_list = self.system_info.m_list
 
-        nr = self.rme.nr
+        nr = self.radial_arrays.nr
 
         poisson_inverse = self.aux_arrays.poisson_inverse
         gaunt_dict = self.aux_arrays.gaunt_dict

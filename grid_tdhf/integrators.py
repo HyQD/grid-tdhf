@@ -1,4 +1,4 @@
-from exceptions import ConvergenceError
+from grid_tdhf.exceptions import ConvergenceError
 from grid_methods.spherical_coordinates.utils import Counter
 
 from scipy.sparse.linalg import LinearOperator, bicgstab
@@ -9,17 +9,19 @@ class CN:
         "n_orbs",
         "nl",
         "nr",
-        "preconditioner",
+        "preconditioner_obj",
         "BICGSTAB_tol",
         "imaginary",
     }
 
-    def __init__(self, n_orbs, nl, nr, preconditioner, BICGSTAB_tol, imaginary=False):
+    def __init__(
+        self, n_orbs, nl, nr, preconditioner_obj, BICGSTAB_tol, imaginary=False
+    ):
         self.n_orbs = n_orbs
         self.nl = nl
         self.nr = nr
         self.tol = BICGSTAB_tol
-        self.preconditioner = preconditioner
+        self.preconditioner = preconditioner_obj
         self.time_factor = 1 if imaginary else 1j
 
     def __call__(self, u, t, dt, rhs):

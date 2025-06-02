@@ -14,7 +14,7 @@ class AuxiliaryArrays:
     centrifugal_potential_r: np.ndarray
 
 
-def setup_auxiliary_arrays(inputs, system_info, gll, rme):
+def setup_auxiliary_arrays(inputs, system_info, radial_arrays):
     r_max = inputs.r_max
     nl = inputs.nl
     nL = inputs.nL
@@ -22,14 +22,14 @@ def setup_auxiliary_arrays(inputs, system_info, gll, rme):
     m_max = system_info.m_max
     Z = system_info.Z
 
-    r = rme.r
-    nr = rme.nr
-    r_dot = rme.r_dot
-    D2 = rme.D2
+    r = radial_arrays.r
+    nr = radial_arrays.nr
+    r_dot = radial_arrays.r_dot
+    D2 = radial_arrays.D2
     T_D2 = -(1 / 2) * D2
 
-    PN_x = gll.PN_x
-    weights = gll.weights
+    PN_x = radial_arrays.PN_x
+    weights = radial_arrays.weights
 
     l_nums = np.arange(nl)
 

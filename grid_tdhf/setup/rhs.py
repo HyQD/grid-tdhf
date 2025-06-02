@@ -4,19 +4,19 @@ from grid_tdhf.utils import select_keys
 def setup_rhs(
     inputs,
     system_info,
-    aux_arrays,
-    rme,
     angular_matrices,
+    radial_arrays,
+    aux_arrays,
     laser_obj,
     potential_computer,
 ):
 
     args = {
-        **dict(vars(inputs)),
-        **dict(vars(system_info)),
-        **dict(vars(aux_arrays)),
-        **dict(vars(rme)),
-        **dict(vars(angular_matrices)),
+        **vars(inputs),
+        **vars(system_info),
+        **vars(angular_matrices),
+        **vars(radial_arrays),
+        **vars(aux_arrays),
     }
 
     from grid_tdhf.rhs import CompositeRHS
