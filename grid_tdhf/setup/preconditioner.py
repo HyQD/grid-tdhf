@@ -1,7 +1,7 @@
 import importlib
 
 
-def setup_laser(inputs, imaginary=False):
+def setup_preconditioner(inputs, imaginary=False):
     preconditioner_class = inputs.preconditioner
     gauge = inputs.gauge
 
