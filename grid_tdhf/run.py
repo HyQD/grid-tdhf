@@ -22,7 +22,7 @@ def main():
 
     aux_arrays = setup_auxiliary_arrays(inputs, system_info, gll, rme)
 
-    laser = setup_laser(inputs)
+    laser_obj = setup_laser(inputs)
 
     potential_computer = PotentialComputer(inputs, system_info, aux_arrays, rme)
 
@@ -31,7 +31,17 @@ def main():
     potential_computer.set_state(u)
     potential_computer.construct_potentials(u)
 
-    rhs = setup_rhs(potential_computer)
+    rhs = setup_rhs(
+        inputs,
+        system_info,
+        aux_arrays,
+        rme,
+        angular_matrices,
+        laser_obj,
+        potential_computer,
+    )
+
+    rhs(u, 0)
 
 
 if __name__ == "__main__":
