@@ -190,7 +190,7 @@ def parse_arguments(verbose=True):
         "-max-itp-iter",
         "-max_itp_iter",
         dest="itp_max_iter",
-        type=float,
+        type=int,
         default=10000,
         help="",
     )
