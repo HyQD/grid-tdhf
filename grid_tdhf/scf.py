@@ -879,7 +879,7 @@ def run_scf(
     nr,
     nl,
     u_in=None,
-    scf_n_it=60,
+    n_scf_iter=60,
     scf_alpha=0.8,
     verbose=True,
 ):
@@ -892,7 +892,7 @@ def run_scf(
             nr,
             nl,
             u_in=u_in,
-            scf_n_it=scf_n_it,
+            scf_n_it=n_scf_iter,
             scf_alpha=scf_alpha,
             verbose=verbose,
         )
@@ -904,7 +904,7 @@ def run_scf(
             nr,
             nl,
             u_in=u_in,
-            scf_n_it=scf_n_it,
+            scf_n_it=n_scf_iter,
             scf_alpha=scf_alpha,
             verbose=verbose,
         )
@@ -916,7 +916,7 @@ def run_scf(
             nr,
             nl,
             u_in=u_in,
-            scf_n_it=scf_n_it,
+            scf_n_it=n_scf_iter,
             scf_alpha=scf_alpha,
             verbose=verbose,
         )
@@ -928,7 +928,7 @@ def run_scf(
             nr,
             nl,
             u_in=u_in,
-            scf_n_it=scf_n_it,
+            scf_n_it=n_scf_iter,
             scf_alpha=scf_alpha,
             verbose=verbose,
         )
@@ -941,7 +941,7 @@ def run_scf(
             nr,
             nl,
             u_in=u_in,
-            scf_n_it=scf_n_it,
+            scf_n_it=n_scf_iter,
             scf_alpha=scf_alpha,
             verbose=verbose,
         )
@@ -954,7 +954,7 @@ def run_scf(
             nr,
             nl,
             u_in=u_in,
-            scf_n_it=scf_n_it,
+            scf_n_it=n_scf_iter,
             scf_alpha=scf_alpha,
             verbose=verbose,
         )
@@ -967,7 +967,7 @@ def run_scf(
             nr,
             nl,
             u_in=u_in,
-            scf_n_it=scf_n_it,
+            scf_n_it=n_scf_iter,
             scf_alpha=scf_alpha,
             verbose=verbose,
         )
@@ -980,7 +980,7 @@ def run_scf(
             nr,
             nl,
             u_in=u_in,
-            scf_n_it=scf_n_it,
+            scf_n_it=n_scf_iter,
             scf_alpha=scf_alpha,
             verbose=verbose,
         )

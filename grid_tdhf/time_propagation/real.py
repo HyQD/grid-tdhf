@@ -34,6 +34,10 @@ def run_time_propagation(
     potential_computer.compute_direct_potential()
     potential_computer.compute_exchange_potential(u)
 
+    energy, orb_energies = sampler.properties_computer.compute_energy(u)
+    print("energy", energy)
+    print(orb_energies)
+
     for i in tqdm.tqdm(range(i_init, total_steps)):
         sampler.sample(u, t, i)
         checkpoint_manager.checkpoint(i, u, t)

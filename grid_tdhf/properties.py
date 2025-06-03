@@ -37,6 +37,7 @@ def compute_energy(
     centrifugal_potential_r,
     D2,
     weights,
+    single_orbital=False,
 ):
     u_1 = np.zeros_like(u, dtype=np.complex128)
     u_2 = np.zeros_like(u, dtype=np.complex128)
@@ -50,10 +51,13 @@ def compute_energy(
         u_temp = contract("I, Ii->Ii", centrifugal_potential_l, u[i])
         u_1[i] += contract("i, Ii->Ii", centrifugal_potential_r, u_temp)
 
-        u_2[i] += 2 * contract("ijr,jr->ir", V_d_electron[m], u[i])
+        if single_orbital:
+            u_2[i] += contract("ijr,jr->ir", V_d_electron[m], u[i])
+        else:
+            u_2[i] += 2 * contract("ijr,jr->ir", V_d_electron[m], u[i])
 
-        for j in range(n_orbs):
-            u_2[i] -= contract("ijr,jr->ir", V_x[j, i], u[j])
+            for j in range(n_orbs):
+                u_2[i] -= contract("ijr,jr->ir", V_x[j, i], u[j])
 
     if has_positron:
 

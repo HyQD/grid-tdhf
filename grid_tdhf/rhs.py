@@ -104,13 +104,13 @@ class RHSMeanField:
         self.nL = nL
         self.has_positron = has_positron
         self.N_orbs = n_orbs + 1 if has_positron else n_orbs
-        self.apply_exchange = True if n_orbs > 1 else False
+        self.single_orbital = False if n_orbs > 1 else True
 
-    def __call__(self, u, t, ravel=True, update_V_x=True):
+    def __call__(self, u, t, ravel=True):
         u = u.reshape(self.N_orbs, self.nl, self.nr)
         u_new = np.zeros((self.N_orbs, self.nl, self.nr), dtype=np.complex128)
 
-        if self.apply_exchange and update_V_x:
+        if not self.single_orbital:
             self.potential_computer.compute_exchange_potential(u)
 
         V_d_electron = self.potential_computer.V_d_electron
@@ -120,9 +120,12 @@ class RHSMeanField:
 
         for p in range(self.n_frozen_orbitals, self.n_orbs):
             m = self.m_list[p]
-            u_new[p] += 2 * contract("ijr,jr->ir", V_d_electron[m], u[p])
 
-            if self.apply_exchange:
+            if self.single_orbital:
+                u_new[p] += contract("ijr,jr->ir", V_d_electron[m], u[p])
+            else:
+                u_new[p] += 2 * contract("ijr,jr->ir", V_d_electron[m], u[p])
+
                 for j in range(self.n_orbs):
                     u_new[p] -= contract("ijr,jr->ir", V_x[j, p], u_bar[j])
 

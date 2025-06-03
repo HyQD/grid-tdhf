@@ -29,6 +29,8 @@ def main():
     radial_arrays = setup_radial_arrays(inputs)
     aux_arrays = setup_auxiliary_arrays(inputs, system_info, radial_arrays)
 
+    u = setup_init_state(inputs, system_info, angular_arrays, radial_arrays, aux_arrays)
+
     laser = setup_laser(inputs)
     integrator = setup_integrator(inputs, system_info, radial_arrays)
 
@@ -40,16 +42,14 @@ def main():
         system_info, angular_arrays, radial_arrays, aux_arrays, potential_computer
     )
 
-    u = setup_init_state(inputs, system_info, radial_arrays, aux_arrays)
-
     rhs = setup_rhs(
         inputs,
         system_info,
         angular_arrays,
         radial_arrays,
         aux_arrays,
-        laser,
         potential_computer,
+        laser,
     )
 
     mask = setup_mask(inputs, radial_arrays)

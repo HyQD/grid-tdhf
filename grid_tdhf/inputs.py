@@ -163,9 +163,9 @@ def parse_arguments(verbose=True):
         help="",
     )
     parser.add_argument(
-        "-n-scf-it",
-        "-n_scf_it",
-        dest="n_scf_it",
+        "-n-scf-iter",
+        "-n_scf_iter",
+        dest="n_scf_iter",
         type=int,
         default=80,
         help="",
@@ -176,6 +176,22 @@ def parse_arguments(verbose=True):
         dest="scf_alpha",
         type=float,
         default=0.8,
+        help="",
+    )
+    parser.add_argument(
+        "-itp-conv-tol",
+        "-itp_conv_tol",
+        dest="itp_conv_tol",
+        type=float,
+        default=1e-14,
+        help="",
+    )
+    parser.add_argument(
+        "-max-itp-iter",
+        "-max_itp_iter",
+        dest="itp_max_iter",
+        type=float,
+        default=10000,
         help="",
     )
     parser.add_argument(

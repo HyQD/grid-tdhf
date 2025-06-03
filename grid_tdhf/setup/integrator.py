@@ -9,6 +9,12 @@ def setup_integrator(inputs, system_info, radial_arrays, imaginary=False):
 
     params = {**vars(inputs), **vars(system_info), **vars(radial_arrays)}
 
+    if inputs.frozen_electrons:
+        params["N_orbs"] = 1
+    elif inputs.frozen_positron:
+        params["N_orbs"] = params["n_orbs"]
+        params["has_positron"] = False
+
     module = importlib.import_module("grid_tdhf.integrators")
     Integrator = getattr(module, integrator_name)
 
