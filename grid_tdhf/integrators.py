@@ -6,22 +6,20 @@ from scipy.sparse.linalg import LinearOperator, bicgstab
 
 class CN:
     required_params = {
-        "n_orbs",
+        "N_orbs",
         "nl",
         "nr",
-        "preconditioner_obj",
+        "preconditioner",
         "BICGSTAB_tol",
         "imaginary",
     }
 
-    def __init__(
-        self, n_orbs, nl, nr, preconditioner_obj, BICGSTAB_tol, imaginary=False
-    ):
-        self.n_orbs = n_orbs
+    def __init__(self, N_orbs, nl, nr, preconditioner, BICGSTAB_tol, imaginary=False):
+        self.N_orbs = N_orbs
         self.nl = nl
         self.nr = nr
         self.tol = BICGSTAB_tol
-        self.preconditioner = preconditioner_obj
+        self.preconditioner = preconditioner
         self.time_factor = 1 if imaginary else 1j
 
     def __call__(self, u, t, dt, rhs):
@@ -29,15 +27,15 @@ class CN:
 
         time_factor = self.time_factor
         tol = self.tol
-        preconditioner = self.prefactor
+        preconditioner = self.preconditioner
 
-        n_orbs = self.n_orbs
+        N_orbs = self.N_orbs
         nl = self.nl
         nr = self.nr
 
         Ap_lambda = lambda u, ti=ti: u.ravel() + time_factor * dt / 2 * rhs(u, ti)
         Ap_linear = LinearOperator(
-            (n_orbs * nl * nr, n_orbs * nl * nr),
+            (N_orbs * nl * nr, N_orbs * nl * nr),
             matvec=Ap_lambda,
         )
 
@@ -57,6 +55,6 @@ class CN:
         if info != 0:
             raise ConvergenceError("BICGSTAB did not converge")
 
-        u = u.reshape((n_orbs, nl, nr))
+        u = u.reshape((N_orbs, nl, nr))
 
         return u

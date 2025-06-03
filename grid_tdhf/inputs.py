@@ -21,7 +21,9 @@ def parse_arguments(verbose=True):
         help="",
     )
     parser.add_argument(
+        "-r-max",
         "-r_max",
+        dest="r_max",
         type=float,
         default=300,
         help="",
@@ -33,7 +35,9 @@ def parse_arguments(verbose=True):
         help="",
     )
     parser.add_argument(
+        "-l-max",
         "-l_max",
+        dest="l_max",
         type=int,
         default=None,
         help="",
@@ -63,13 +67,17 @@ def parse_arguments(verbose=True):
         help="",
     )
     parser.add_argument(
+        "-ncycles-after-pulse",
         "-ncycles_after_pulse",
+        dest="ncycles_after_pulse",
         type=float,
         default=1,
         help="",
     )
     parser.add_argument(
         "-ncycles_ramp",
+        "-ncycles_ramp",
+        dest="ncycles_ramp",
         type=float,
         default=2,
         help="",
@@ -93,19 +101,25 @@ def parse_arguments(verbose=True):
         help="",
     )
     parser.add_argument(
+        "-n-frozen-orbitals",
         "-n_frozen_orbitals",
+        dest="n_frozen_orbitals",
         type=int,
         default=0,
         help="",
     )
     parser.add_argument(
+        "-frozen-electrons",
         "-frozen_electrons",
+        dest="frozen_electrons",
         type=bool,
         default=False,
         help="",
     )
     parser.add_argument(
+        "-frozen-positron",
         "-frozen_positron",
+        dest="frozen_positron",
         type=bool,
         default=False,
         help="",
@@ -117,76 +131,148 @@ def parse_arguments(verbose=True):
         help="",
     )
     parser.add_argument(
-        "-integrator",
+        "-integrator-name",
+        "-integrator_name",
+        dest="integrator_name",
         type=str,
         default="CN",
         help="",
     )
     parser.add_argument(
-        "-preconditioner",
+        "-preconditioner-name",
+        "-preconditioner_name",
+        dest="preconditioner_name",
         type=str,
         default="A1",
         help="",
     )
     parser.add_argument(
-        "-ckpt_freq",
+        "-checkpoint-interval",
+        "-checkpoint_interval",
+        dest="checkpoint_interval",
         type=int,
         default=0,
         help="n iterations between each checkpoint. 0 for no checkpointing",
     )
     parser.add_argument(
-        "-ckpt_name",
-        type=str,
-        default=None,
-        help="",
-    )
-    parser.add_argument(
-        "-sample_wf_freq",
-        type=int,
-        default=0,
-        help="n iterations between each wavefunction sample. 0 for no wf sampling",
-    )
-    parser.add_argument(
-        "-exchange_type",
-        type=int,
-        default=2,
-        help="1: llrr, 2: ppllr",
-    )
-    parser.add_argument(
+        "-init-state",
         "-init_state",
+        dest="init_state",
         type=str,
         default="scf",
         help="",
     )
     parser.add_argument(
-        "-scf_n_it",
+        "-n-scf-it",
+        "-n_scf_it",
+        dest="n_scf_it",
         type=int,
         default=80,
         help="",
     )
     parser.add_argument(
+        "-scf-alpha",
         "-scf_alpha",
+        dest="scf_alpha",
         type=float,
         default=0.8,
         help="",
     )
     parser.add_argument(
+        "-BICGSTAB-tol",
         "-BICGSTAB_tol",
+        dest="BICGSTAB_tol",
         type=float,
         default=1e-12,
         help="",
     )
     parser.add_argument(
-        "-use_mask",
+        "-mask-name",
+        "-mask_name",
+        dest="mask_name",
+        type=str,
+        default="cosine_mask",
+        help="",
+    )
+    parser.add_argument(
+        "-mask-r0",
+        "-mask_r0",
+        dest="mask_r0",
+        type=float,
+        default=30,
+        help="",
+    )
+    parser.add_argument(
+        "-mask-n",
+        "-mask_n",
+        dest="mask_n",
+        type=float,
+        default=4,
+        help="",
+    )
+    parser.add_argument(
+        "-sample-expec-z",
+        "-sample_expec_z",
+        dest="sample_expec_z",
         type=bool,
         default=True,
         help="",
     )
     parser.add_argument(
-        "-compute_energy",
+        "-expec-z-sample-interval",
+        "-expec_z_sample_interval",
+        dest="expec_z_sample_interval",
+        type=int,
+        default=1,
+        help="",
+    )
+    parser.add_argument(
+        "-sample-norm",
+        "-sample_norm",
+        dest="sample_norm",
         type=bool,
         default=True,
         help="",
+    )
+    parser.add_argument(
+        "-norm-sample-interval",
+        "-norm_sample_interval",
+        dest="norm_sample_interval",
+        type=int,
+        default=1,
+        help="",
+    )
+    parser.add_argument(
+        "-sample-energy",
+        "-sample_energy",
+        dest="sample_energy",
+        type=bool,
+        default=False,
+        help="",
+    )
+    parser.add_argument(
+        "-energy-sample-interval",
+        "-energy_sample_interval",
+        dest="energy_sample_interval",
+        type=int,
+        default=1,
+        help="",
+    )
+    parser.add_argument(
+        "-sample-state",
+        "-sample_state",
+        dest="sample_state",
+        type=bool,
+        default=False,
+        help="",
+    )
+    parser.add_argument(
+        "-state-sample-interval",
+        "-state_sample_interval",
+        dest="state_sample_interval",
+        type=int,
+        default=10,
+        help="n iterations between each state sample. 0 for no state sampling",
     )
     parser.add_argument(
         "-comment",
@@ -195,7 +281,9 @@ def parse_arguments(verbose=True):
         help="",
     )
     parser.add_argument(
-        "-laser",
+        "-laser-name",
+        "-laser_name",
+        dest="laser_name",
         type=str,
         default="SineSquareLaser",
         help="",

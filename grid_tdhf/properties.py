@@ -18,7 +18,7 @@ def compute_expec_z(u, z_Omega, r, weights, m_list):
 
     for p in range(n_orbs):
         m = m_list[p]
-        u_temp[p] = contract("ij, jr -> ir", z_Omega[f"{m}"], u[p])
+        u_temp[p] = contract("ij, jr -> ir", z_Omega[m], u[p])
 
     return contract("pir,r,pir->p", weights * u.conj(), r, u_temp)
 

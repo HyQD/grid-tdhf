@@ -104,13 +104,14 @@ class RHSMeanField:
         self.nL = nL
         self.has_positron = has_positron
         self.N_orbs = n_orbs + 1 if has_positron else n_orbs
+        self.apply_exchange = True if n_orbs > 1 else False
 
     def __call__(self, u, t, ravel=True, update_V_x=True):
         u = u.reshape(self.N_orbs, self.nl, self.nr)
         u_new = np.zeros((self.N_orbs, self.nl, self.nr), dtype=np.complex128)
 
-        if update_V_x:
-            self.potential_computer.construct_exchange_potential(u)
+        if self.apply_exchange and update_V_x:
+            self.potential_computer.compute_exchange_potential(u)
 
         V_d_electron = self.potential_computer.V_d_electron
         V_d_positron = self.potential_computer.V_d_positron
@@ -121,8 +122,9 @@ class RHSMeanField:
             m = self.m_list[p]
             u_new[p] += 2 * contract("ijr,jr->ir", V_d_electron[m], u[p])
 
-            for j in range(self.n_orbs):
-                u_new[p] -= contract("ijr,jr->ir", V_x[j, p], u_bar[j])
+            if self.apply_exchange:
+                for j in range(self.n_orbs):
+                    u_new[p] -= contract("ijr,jr->ir", V_x[j, p], u_bar[j])
 
         if self.has_positron:
             for p in range(self.n_frozen_orbitals, self.n_orbs):
@@ -140,7 +142,7 @@ class RHSDipoleVelocityGauge:
         "n_orbs",
         "nl",
         "nr",
-        "laser_obj",
+        "laser",
         "z_Omega",
         "H_z_beta",
         "r",
@@ -155,7 +157,7 @@ class RHSDipoleVelocityGauge:
         n_orbs,
         nl,
         nr,
-        laser_obj,
+        laser,
         z_Omega,
         H_z_beta,
         r,
@@ -167,7 +169,7 @@ class RHSDipoleVelocityGauge:
         self.n_orbs = n_orbs
         self.nl = nl
         self.nr = nr
-        self.laser = laser_obj
+        self.laser = laser
         self.z_Omega = z_Omega
         self.H_z_beta = H_z_beta
         self.D1 = D1
@@ -205,7 +207,7 @@ class RHSDipoleLengthGauge:
         "n_orbs",
         "nl",
         "nr",
-        "laser_obj",
+        "laser",
         "z_Omega",
         "r",
         "n_frozen_orbitals",
@@ -218,7 +220,7 @@ class RHSDipoleLengthGauge:
         n_orbs,
         nl,
         nr,
-        laser_obj,
+        laser,
         z_Omega,
         r,
         n_frozen_orbitals,
@@ -228,7 +230,7 @@ class RHSDipoleLengthGauge:
         self.n_orbs = n_orbs
         self.nl = nl
         self.nr = nr
-        self.laser = laser_obj
+        self.laser = laser
         self.z_Omega = z_Omega
         self.r = r
         self.n_frozen_orbitals = n_frozen_orbitals

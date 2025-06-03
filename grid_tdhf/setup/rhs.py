@@ -7,7 +7,7 @@ def setup_rhs(
     angular_matrices,
     radial_arrays,
     aux_arrays,
-    laser_obj,
+    laser,
     potential_computer,
 ):
 
@@ -34,9 +34,7 @@ def setup_rhs(
         **select_keys(args, RHSMeanField.required_params),
         potential_computer=potential_computer
     )
-    dipole = RHSDipole(
-        **select_keys(args, RHSDipole.required_params), laser_obj=laser_obj
-    )
+    dipole = RHSDipole(**select_keys(args, RHSDipole.required_params), laser=laser)
 
     rhs = CompositeRHS(core=core, mean_field=mean_field, dipole=dipole)
 

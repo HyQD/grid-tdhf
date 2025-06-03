@@ -1,8 +1,16 @@
 import importlib
 
+from grid_tdhf.utils import select_keys
+
+from scipy.sparse.linalg import LinearOperator
+
 
 def setup_preconditioner(inputs, system_info, radial_arrays, imaginary=False):
-    preconditioner_name = inputs.preconditioner
+    N_orbs = system_info.N_orbs
+    nl = inputs.nl
+    nr = radial_arrays.nr
+
+    preconditioner_name = inputs.preconditioner_name
 
     params = {**vars(inputs), **vars(system_info), **vars(radial_arrays)}
 
@@ -15,6 +23,8 @@ def setup_preconditioner(inputs, system_info, radial_arrays, imaginary=False):
             f"Missing required parameters for {preconditioner_name}: {', '.join(sorted(missing_params))}"
         )
 
-    preconditioner_args = {k: params[k] for k in Preconditioner.required_params if k in params}
+    preconditioner_args = select_keys(params, Preconditioner.required_params)
 
-    return Preconditioner(**preconditioner_args, imaginary=imaginary)
+    preconditioner = Preconditioner(**preconditioner_args, imaginary=imaginary)
+
+    return LinearOperator((N_orbs * nl * nr, N_orbs * nl * nr), matvec=preconditioner)

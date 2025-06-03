@@ -1,4 +1,5 @@
 import numpy as np
+import uuid
 
 from grid_tdhf.inputs import parse_arguments
 from grid_tdhf.setup.system_info import get_atomic_system_params
@@ -8,12 +9,19 @@ from grid_tdhf.setup.auxiliary_arrays import setup_auxiliary_arrays
 from grid_tdhf.setup.laser import setup_laser
 from grid_tdhf.setup.init_state import setup_init_state
 from grid_tdhf.setup.rhs import setup_rhs
-from grid_tdhf.potentials import PotentialComputer
+from grid_tdhf.computers.potential_computer import PotentialComputer
+from grid_tdhf.computers.properties_computer import PropertiesComputer
 from grid_tdhf.setup.integrator import setup_integrator
+from grid_tdhf.setup.sampler import setup_sampler
+from grid_tdhf.setup.simulation import setup_simulation, run_simulation
+from grid_tdhf.setup.mask import setup_mask
+from grid_tdhf.setup.checkpoint_manager import setup_checkpoint_manager
 
 
 def main():
     inputs = parse_arguments(verbose=False)
+
+    fileroot = str(uuid.uuid4())
 
     system_info = get_atomic_system_params(inputs)
 
@@ -21,18 +29,18 @@ def main():
     radial_arrays = setup_radial_arrays(inputs)
     aux_arrays = setup_auxiliary_arrays(inputs, system_info, radial_arrays)
 
-    laser_obj = setup_laser(inputs)
+    laser = setup_laser(inputs)
+    integrator = setup_integrator(inputs, system_info, radial_arrays)
 
     potential_computer = PotentialComputer(
         inputs, system_info, radial_arrays, aux_arrays
     )
 
+    properties_computer = PropertiesComputer(
+        system_info, angular_arrays, radial_arrays, aux_arrays, potential_computer
+    )
+
     u = setup_init_state(inputs, system_info, radial_arrays, aux_arrays)
-
-    potential_computer.set_state(u)
-    potential_computer.construct_potentials(u)
-
-    integrator = setup_integrator(inputs, system_info, radial_arrays)
 
     rhs = setup_rhs(
         inputs,
@@ -40,8 +48,31 @@ def main():
         angular_arrays,
         radial_arrays,
         aux_arrays,
-        laser_obj,
+        laser,
         potential_computer,
+    )
+
+    mask = setup_mask(inputs, radial_arrays)
+
+    simulation_info = setup_simulation(inputs)
+
+    sampler = setup_sampler(properties_computer, inputs)
+    checkpoint_manager = setup_checkpoint_manager(
+        fileroot, sampler, inputs, simulation_info
+    )
+
+    run_simulation(
+        u,
+        integrator,
+        rhs,
+        mask,
+        potential_computer,
+        sampler,
+        checkpoint_manager,
+        inputs,
+        system_info,
+        radial_arrays,
+        simulation_info,
     )
 
 

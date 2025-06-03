@@ -31,14 +31,9 @@ def setup_auxiliary_arrays(inputs, system_info, radial_arrays):
     PN_x = radial_arrays.PN_x
     weights = radial_arrays.weights
 
-    l_nums = np.arange(nl)
-
-    centrifugal_potential_l = l_nums * (l_nums + 1)
-    centrifugal_potential_r = 1 / (2 * r**2)
     coulomb_potential = -Z / r
-
-    poisson_inverse = setup_poisson_inverse(D2, r, r_dot, PN_x, nL, nr)
-    poisson_inverse += setup_poisson_inverse_boundary(r, nL, nr, r_max, weights)
+    centrifugal_potential_l = np.arange(nl) * (np.arange(nl) + 1)
+    centrifugal_potential_r = 1 / (2 * r**2)
 
     H_core_electron = setup_H_core(
         T_D2,
@@ -57,6 +52,9 @@ def setup_auxiliary_arrays(inputs, system_info, radial_arrays):
         nr,
         positron=True,
     )
+
+    poisson_inverse = setup_poisson_inverse(D2, r, r_dot, PN_x, nL, nr)
+    poisson_inverse += setup_poisson_inverse_boundary(r, nL, nr, r_max, weights)
 
     gaunt_dict = setup_gaunt_dict(nl, nL, m_max)
 

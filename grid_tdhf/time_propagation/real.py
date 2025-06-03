@@ -3,12 +3,11 @@ import tqdm
 REQUIRED_TIME_PROPAGATION_PARAMS = {
     "u",
     "integrator",
-    "potential_computer",
     "rhs",
+    "potential_computer",
     "dt",
-    "n_it",
+    "total_steps",
     "t0",
-    "i_ini",
     "mask",
     "sampler",
     "checkpoint_manager",
@@ -18,10 +17,10 @@ REQUIRED_TIME_PROPAGATION_PARAMS = {
 def run_time_propagation(
     u,
     integrator,
-    potential_computer,
     rhs,
+    potential_computer,
     dt,
-    n_it,
+    total_steps,
     t0=0,
     i_init=0,
     mask=None,
@@ -31,9 +30,16 @@ def run_time_propagation(
 
     t = t0
 
-    for i in tqdm.tqdm(range(i_init, n_it)):
+    potential_computer.set_state(u)
+    potential_computer.compute_direct_potential()
+    potential_computer.compute_exchange_potential(u)
+
+    for i in tqdm.tqdm(range(i_init, total_steps)):
+        sampler.sample(u, t, i)
+        checkpoint_manager.checkpoint(i, u, t)
+
         potential_computer.set_state(u)
-        potential_computer.construct_direct_potential()
+        potential_computer.compute_direct_potential()
 
         u = integrator(u, t, dt, rhs)
 
@@ -41,3 +47,5 @@ def run_time_propagation(
             u = mask * u
 
         t += dt
+
+    checkpoint_manager.finalize(i, u, t)
