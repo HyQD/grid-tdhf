@@ -5,14 +5,14 @@ from grid_tdhf.utils import select_keys
 from scipy.sparse.linalg import LinearOperator
 
 
-def setup_preconditioner(inputs, system_info, radial_arrays, imaginary=False):
-    N_orbs = system_info.N_orbs
-    nl = inputs.nl
-    nr = radial_arrays.nr
+def setup_preconditioner(simulation_config, imaginary=False):
+    N_orbs = simulation_config.N_orbs
+    nl = simulation_config.nl
+    nr = simulation_config.nr
 
-    preconditioner_name = inputs.preconditioner_name
+    preconditioner_name = simulation_config.preconditioner_name
 
-    params = {**vars(inputs), **vars(system_info), **vars(radial_arrays)}
+    params = {**vars(simulation_config)}
 
     module = importlib.import_module("grid_tdhf.preconditioners")
     Preconditioner = getattr(module, preconditioner_name)

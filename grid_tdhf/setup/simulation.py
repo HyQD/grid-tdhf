@@ -11,30 +11,21 @@ from grid_tdhf.constants import LASER_GROUPS
 
 
 def run_simulation(
-    u,
     integrator,
     rhs,
     mask,
     potential_computer,
     sampler,
     checkpoint_manager,
-    inputs,
-    system_info,
-    radial_arrays,
+    simulation_config,
     simulation_info,
 ):
-    params = {
-        **vars(inputs),
-        **vars(system_info),
-        **vars(radial_arrays),
-        **vars(simulation_info),
-    }
+    params = {**vars(simulation_config), **vars(simulation_info)}
 
     simulation_params = select_keys(params, REQUIRED_TIME_PROPAGATION_PARAMS)
 
     run_time_propagation(
         **simulation_params,
-        u=u,
         integrator=integrator,
         rhs=rhs,
         mask=mask,
@@ -44,19 +35,24 @@ def run_simulation(
     )
 
 
-def setup_simulation(inputs):
-    total_time = determine_simulation_time(inputs)
-    total_steps = int(total_time / inputs.dt)
+def setup_simulation(simulation_config):
+    total_time = determine_simulation_time(simulation_config)
+    total_steps = int(total_time / simulation_config.dt)
 
     return SimpleNamespace(
         total_steps=total_steps,
     )
 
 
-def determine_simulation_time(inputs):
-    if inputs.laser_name in LASER_GROUPS.SINUSOIDAL:
-        T = 2 * np.pi * (inputs.ncycles + inputs.ncycles_after_pulse) / inputs.omega
-    elif inputs.laser_name in LASER_GROUPS.DELTA_PULSE:
-        T = inputs.total_time
+def determine_simulation_time(simulation_config):
+    if simulation_config.laser_name in LASER_GROUPS.SINUSOIDAL:
+        ncycles = simulation_config.ncycles
+        ncycles_after_pulse = simulation_config.ncycles_after_pulse
+        omega = simulation_config.omega
+
+        T = 2 * np.pi * (ncycles + ncycles_after_pulse) / omega
+
+    elif simulation_config.laser_name in LASER_GROUPS.DELTA_PULSE:
+        T = simulation_config.total_time
 
     return T

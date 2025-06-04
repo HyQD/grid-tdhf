@@ -3,11 +3,11 @@ import importlib
 from grid_tdhf.utils import select_keys
 
 
-def setup_laser(inputs):
-    laser_name = inputs.laser_name
-    gauge = inputs.gauge
+def setup_laser(simulation_config):
+    laser_name = simulation_config.laser_name
+    gauge = simulation_config.gauge
 
-    params = {**vars(inputs)}
+    params = {**vars(simulation_config)}
 
     module = importlib.import_module("grid_tdhf.lasers")
     Laser = getattr(module, laser_name)

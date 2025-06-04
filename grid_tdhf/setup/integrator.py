@@ -4,24 +4,16 @@ from grid_tdhf.utils import select_keys
 from grid_tdhf.setup.preconditioner import setup_preconditioner
 
 
-def setup_integrator(inputs, system_info, radial_arrays, imaginary=False):
-    integrator_name = inputs.integrator_name
+def setup_integrator(simulation_config, imaginary=False):
+    integrator_name = simulation_config.integrator_name
 
-    params = {**vars(inputs), **vars(system_info), **vars(radial_arrays)}
-
-    if inputs.frozen_electrons:
-        params["N_orbs"] = 1
-    elif inputs.frozen_positron:
-        params["N_orbs"] = params["n_orbs"]
-        params["has_positron"] = False
+    params = {**vars(simulation_config)}
 
     module = importlib.import_module("grid_tdhf.integrators")
     Integrator = getattr(module, integrator_name)
 
     if "preconditioner" in Integrator.required_params:
-        preconditioner = setup_preconditioner(
-            inputs, system_info, radial_arrays, imaginary=imaginary
-        )
+        preconditioner = setup_preconditioner(simulation_config, imaginary=imaginary)
         params["preconditioner"] = preconditioner
 
     missing_params = Integrator.required_params - params.keys() - {"imaginary"}

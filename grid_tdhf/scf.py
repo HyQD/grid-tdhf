@@ -291,9 +291,18 @@ def run_scf_PsH(
     u_1s_in = u_in[0, :]
     u_Ps_in = u_in[-1, :]
 
+    from grid_tdhf.potentials import compute_spherical_direct_potential
+
     for _ in range(scf_n_it):
         rho_tilde = np.abs(u_1s_in) ** 2
         v_H = np.dot(poisson_inverse[0, :, :], rho_tilde)
+
+        u_temp = np.zeros((2, 3, nr))
+        u_temp[0, 2, :] = u_1s_in
+
+        V = compute_spherical_direct_potential(u_temp, poisson_inverse)
+
+        print(np.max(np.abs(v_H - V)))
 
         rho_Ps = np.abs(u_Ps_in) ** 2
         v_p = np.dot(poisson_inverse[0, :, :], rho_Ps)

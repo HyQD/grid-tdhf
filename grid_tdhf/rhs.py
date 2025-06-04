@@ -135,7 +135,7 @@ class RHSMeanField:
 
                 u_new[p] -= contract("ijr,jr->ir", V_d_positron[m], u[p])
 
-            u_new[-1] -= 2 * contract("ijr,jr->ir", V_d_electron["0"], u[-1])
+            u_new[-1] -= 2 * contract("ijr,jr->ir", V_d_electron[0], u[-1])
 
         return u_new.ravel() if ravel else u_new
 
@@ -199,7 +199,7 @@ class RHSDipoleVelocityGauge:
             du_dr = contract("ij, Ij->Ii", self.D1, u[-1])
 
             u_new[-1] = -self.laser(t) * pz_psi(
-                u[-1], du_dr, self.z_Omega["0"], self.H_z_beta["0"], self.r_inv
+                u[-1], du_dr, self.z_Omega[0], self.H_z_beta[0], self.r_inv
             )
 
         return u_new.ravel() if ravel else u_new
@@ -252,7 +252,7 @@ class RHSDipoleLengthGauge:
             u_new[p] += self.laser(t) * contract("Ik, k->Ik", u_temp, self.r)
 
         if self.has_positron:
-            u_temp = contract("IJ, Jk->Ik", self.z_Omega["0"], u[-1])
+            u_temp = contract("IJ, Jk->Ik", self.z_Omega[0], u[-1])
             u_new[-1] -= self.laser(t) * contract("Ik, k->Ik", u_temp, self.r)
 
         return u_new.ravel() if ravel else u_new

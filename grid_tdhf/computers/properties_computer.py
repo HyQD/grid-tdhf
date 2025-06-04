@@ -6,22 +6,20 @@ from grid_tdhf.properties import (
 
 
 class PropertiesComputer:
-    def __init__(
-        self, system_info, angular_arrays, radial_arrays, aux_arrays, potential_computer
-    ):
-        self.n_orbs = system_info.n_orbs
-        self.m_list = system_info.m_list
-        self.has_positron = system_info.has_positron
+    def __init__(self, simulation_config, potential_computer):
+        self.n_orbs = simulation_config.n_orbs
+        self.m_list = simulation_config.m_list
+        self.has_positron = simulation_config.has_positron
 
-        self.z_Omega = angular_arrays.z_Omega
+        self.z_Omega = simulation_config.z_Omega
 
-        self.r = radial_arrays.r
-        self.D2 = radial_arrays.D2
-        self.weights = radial_arrays.weights
+        self.r = simulation_config.r
+        self.D2 = simulation_config.D2
+        self.weights = simulation_config.weights
 
-        self.coulomb_potential = aux_arrays.coulomb_potential
-        self.centrifugal_potential_l = aux_arrays.centrifugal_potential_l
-        self.centrifugal_potential_r = aux_arrays.centrifugal_potential_r
+        self.coulomb_potential = simulation_config.coulomb_potential
+        self.centrifugal_potential_l = simulation_config.centrifugal_potential_l
+        self.centrifugal_potential_r = simulation_config.centrifugal_potential_r
 
         self.potential_computer = potential_computer
 

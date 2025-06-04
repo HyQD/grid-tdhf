@@ -16,6 +16,8 @@ from grid_tdhf.setup.sampler import setup_sampler
 from grid_tdhf.setup.simulation import setup_simulation, run_simulation
 from grid_tdhf.setup.mask import setup_mask
 from grid_tdhf.setup.checkpoint_manager import setup_checkpoint_manager
+from grid_tdhf.setup.simulation_config import generate_simulation_config
+from grid_tdhf.setup.freeze_config import generate_freeze_config
 
 
 def main():
@@ -31,47 +33,42 @@ def main():
 
     u = setup_init_state(inputs, system_info, angular_arrays, radial_arrays, aux_arrays)
 
-    laser = setup_laser(inputs)
-    integrator = setup_integrator(inputs, system_info, radial_arrays)
-
-    potential_computer = PotentialComputer(
-        inputs, system_info, radial_arrays, aux_arrays
-    )
-
-    properties_computer = PropertiesComputer(
-        system_info, angular_arrays, radial_arrays, aux_arrays, potential_computer
-    )
-
-    rhs = setup_rhs(
+    config_overrides = generate_freeze_config(u, inputs, aux_arrays)
+    simulation_config = generate_simulation_config(
+        u,
         inputs,
         system_info,
         angular_arrays,
         radial_arrays,
         aux_arrays,
-        potential_computer,
-        laser,
+        overrides=config_overrides,
     )
 
-    mask = setup_mask(inputs, radial_arrays)
+    integrator = setup_integrator(simulation_config)
 
-    simulation_info = setup_simulation(inputs)
+    potential_computer = PotentialComputer(simulation_config)
+    properties_computer = PropertiesComputer(simulation_config, potential_computer)
 
-    sampler = setup_sampler(properties_computer, inputs)
+    laser = setup_laser(simulation_config)
+    rhs = setup_rhs(simulation_config, potential_computer, laser)
+
+    mask = setup_mask(simulation_config)
+
+    simulation_info = setup_simulation(simulation_config)
+
+    sampler = setup_sampler(simulation_config, properties_computer)
     checkpoint_manager = setup_checkpoint_manager(
         fileroot, sampler, inputs, simulation_info
     )
 
     run_simulation(
-        u,
         integrator,
         rhs,
         mask,
         potential_computer,
         sampler,
         checkpoint_manager,
-        inputs,
-        system_info,
-        radial_arrays,
+        simulation_config,
         simulation_info,
     )
 

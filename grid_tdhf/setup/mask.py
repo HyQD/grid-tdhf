@@ -2,13 +2,13 @@ from grid_tdhf.utils import select_keys
 from grid_tdhf.masks import MASK_REGISTRY
 
 
-def setup_mask(inputs, radial_arrays):
-    mask_name = inputs.mask_name
+def setup_mask(simulation_config):
+    mask_name = simulation_config.mask_name
 
     if mask_name == "no-mask":
         return None
 
-    params = {**vars(inputs), **vars(radial_arrays)}
+    params = {**vars(simulation_config)}
 
     if mask_name not in MASK_REGISTRY:
         raise ValueError(f"Mask {mask_name} is not available.")

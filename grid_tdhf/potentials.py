@@ -2,6 +2,11 @@ import numpy as np
 from opt_einsum import contract
 
 
+def compute_spherical_direct_potential(u, poisson_inverse):
+    rho = contract("olr->r", np.abs(u) ** 2)
+    return np.dot(poisson_inverse[0, :, :], rho)
+
+
 def compute_direct_potential(
     u_bar, n_orbs, nl, nr, m_list, m_max, poisson_inverse, gaunt_dict, has_positron
 ):
