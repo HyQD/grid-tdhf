@@ -26,7 +26,6 @@ class RHSCore:
         "coulomb_potential",
         "centrifugal_potential_l",
         "centrifugal_potential_r",
-        "n_frozen_orbitals",
         "has_positron",
     }
 
@@ -39,7 +38,6 @@ class RHSCore:
         coulomb_potential,
         centrifugal_potential_l,
         centrifugal_potential_r,
-        n_frozen_orbitals,
         has_positron=False,
     ):
         self.T_D2 = -(1 / 2) * D2
@@ -49,7 +47,6 @@ class RHSCore:
         self.n_orbs = n_orbs
         self.nl = nl
         self.nr = nr
-        self.n_frozen_orbitals = n_frozen_orbitals
         self.has_positron = has_positron
         self.N_orbs = n_orbs + 1 if has_positron else n_orbs
 
@@ -57,7 +54,7 @@ class RHSCore:
         u = u.reshape(self.N_orbs, self.nl, self.nr)
         u_new = np.zeros((self.N_orbs, self.nl, self.nr), dtype=np.complex128)
 
-        for p in range(self.n_frozen_orbitals, self.n_orbs):
+        for p in range(self.n_orbs):
             u_new[p] += contract("Ij, ij->Ii", u[p], self.T_D2)
             u_new[p] += contract("Ik, k->Ik", u[p], self.coulomb_potential)
             u_temp = contract("I, Ii->Ii", self.centrifugal_potential_l, u[p])
@@ -78,7 +75,6 @@ class RHSMeanField:
         "n_orbs",
         "nl",
         "nr",
-        "n_frozen_orbitals",
         "nL",
         "m_list",
         "has_positron",
@@ -90,7 +86,6 @@ class RHSMeanField:
         n_orbs,
         nl,
         nr,
-        n_frozen_orbitals,
         nL,
         m_list,
         has_positron=False,
@@ -100,7 +95,6 @@ class RHSMeanField:
         self.nl = nl
         self.nr = nr
         self.m_list = m_list
-        self.n_frozen_orbitals = n_frozen_orbitals
         self.nL = nL
         self.has_positron = has_positron
         self.N_orbs = n_orbs + 1 if has_positron else n_orbs
@@ -118,7 +112,7 @@ class RHSMeanField:
         V_x = self.potential_computer.V_x
         u_bar = self.potential_computer.u
 
-        for p in range(self.n_frozen_orbitals, self.n_orbs):
+        for p in range(self.n_orbs):
             m = self.m_list[p]
 
             if self.single_orbital:
@@ -130,7 +124,7 @@ class RHSMeanField:
                     u_new[p] -= contract("ijr,jr->ir", V_x[j, p], u_bar[j])
 
         if self.has_positron:
-            for p in range(self.n_frozen_orbitals, self.n_orbs):
+            for p in range(self.n_orbs):
                 m = self.m_list[p]
 
                 u_new[p] -= contract("ijr,jr->ir", V_d_positron[m], u[p])
@@ -150,7 +144,6 @@ class RHSDipoleVelocityGauge:
         "H_z_beta",
         "r",
         "D1",
-        "n_frozen_orbitals",
         "m_list",
         "has_positron",
     }
@@ -165,7 +158,6 @@ class RHSDipoleVelocityGauge:
         H_z_beta,
         r,
         D1,
-        n_frozen_orbitals,
         m_list,
         has_positron=False,
     ):
@@ -177,7 +169,6 @@ class RHSDipoleVelocityGauge:
         self.H_z_beta = H_z_beta
         self.D1 = D1
         self.r_inv = 1 / r
-        self.n_frozen_orbitals = n_frozen_orbitals
         self.m_list = m_list
         self.has_positron = has_positron
         self.N_orbs = n_orbs + 1 if has_positron else n_orbs
@@ -186,7 +177,7 @@ class RHSDipoleVelocityGauge:
         u = u.reshape(self.N_orbs, self.nl, self.nr)
         u_new = np.zeros((self.N_orbs, self.nl, self.nr), dtype=np.complex128)
 
-        for p in range(self.n_frozen_orbitals, self.n_orbs):
+        for p in range(self.n_orbs):
             m = self.m_list[p]
 
             du_dr = contract("ij, Ij->Ii", self.D1, u[p])
@@ -213,7 +204,6 @@ class RHSDipoleLengthGauge:
         "laser",
         "z_Omega",
         "r",
-        "n_frozen_orbitals",
         "m_list",
         "has_positron",
     }
@@ -226,7 +216,6 @@ class RHSDipoleLengthGauge:
         laser,
         z_Omega,
         r,
-        n_frozen_orbitals,
         m_list,
         has_positron=False,
     ):
@@ -236,7 +225,6 @@ class RHSDipoleLengthGauge:
         self.laser = laser
         self.z_Omega = z_Omega
         self.r = r
-        self.n_frozen_orbitals = n_frozen_orbitals
         self.m_list = m_list
         self.has_positron = has_positron
         self.N_orbs = n_orbs + 1 if has_positron else n_orbs
@@ -245,7 +233,7 @@ class RHSDipoleLengthGauge:
         u = u.reshape(self.N_orbs, self.nl, self.nr)
         u_new = np.zeros((self.N_orbs, self.nl, self.nr), dtype=np.complex128)
 
-        for p in range(self.n_frozen_orbitals, self.n_orbs):
+        for p in range(self.n_orbs):
             m = self.m_list[p]
 
             u_temp = contract("IJ, Jk->Ik", self.z_Omega[m], u[p])

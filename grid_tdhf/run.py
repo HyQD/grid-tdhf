@@ -1,4 +1,3 @@
-import numpy as np
 import uuid
 
 from grid_tdhf.inputs import parse_arguments
@@ -33,7 +32,7 @@ def main():
 
     u = setup_init_state(inputs, system_info, angular_arrays, radial_arrays, aux_arrays)
 
-    config_overrides = generate_freeze_config(u, inputs, aux_arrays)
+    config_overrides = generate_freeze_config(u, inputs, system_info, aux_arrays)
     simulation_config = generate_simulation_config(
         u,
         inputs,
