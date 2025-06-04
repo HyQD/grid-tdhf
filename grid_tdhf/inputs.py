@@ -101,6 +101,14 @@ def parse_arguments(verbose=True):
         help="",
     )
     parser.add_argument(
+        "-laser-name",
+        "-laser_name",
+        dest="laser_name",
+        type=str,
+        default="SineSquareLaser",
+        help="",
+    )
+    parser.add_argument(
         "-n-frozen-orbitals",
         "-n_frozen_orbitals",
         dest="n_frozen_orbitals",
@@ -112,7 +120,9 @@ def parse_arguments(verbose=True):
         "-frozen-electrons",
         "-frozen_electrons",
         dest="frozen_electrons",
-        type=bool,
+        type=str2bool,
+        nargs="?",
+        const=True,
         default=False,
         help="",
     )
@@ -120,7 +130,9 @@ def parse_arguments(verbose=True):
         "-frozen-positron",
         "-frozen_positron",
         dest="frozen_positron",
-        type=bool,
+        type=str2bool,
+        nargs="?",
+        const=True,
         default=False,
         help="",
     )
@@ -230,7 +242,9 @@ def parse_arguments(verbose=True):
         "-sample-expec-z",
         "-sample_expec_z",
         dest="sample_expec_z",
-        type=bool,
+        type=str2bool,
+        nargs="?",
+        const=True,
         default=True,
         help="",
     )
@@ -246,7 +260,9 @@ def parse_arguments(verbose=True):
         "-sample-norm",
         "-sample_norm",
         dest="sample_norm",
-        type=bool,
+        type=str2bool,
+        nargs="?",
+        const=True,
         default=True,
         help="",
     )
@@ -262,7 +278,9 @@ def parse_arguments(verbose=True):
         "-sample-energy",
         "-sample_energy",
         dest="sample_energy",
-        type=bool,
+        type=str2bool,
+        nargs="?",
+        const=True,
         default=False,
         help="",
     )
@@ -278,7 +296,9 @@ def parse_arguments(verbose=True):
         "-sample-state",
         "-sample_state",
         dest="sample_state",
-        type=bool,
+        type=str2bool,
+        nargs="?",
+        const=True,
         default=False,
         help="",
     )
@@ -297,11 +317,11 @@ def parse_arguments(verbose=True):
         help="",
     )
     parser.add_argument(
-        "-laser-name",
-        "-laser_name",
-        dest="laser_name",
-        type=str,
-        default="SineSquareLaser",
+        "--gs-only",
+        dest="gs_only",
+        type=str2bool,
+        nargs="?",
+        const=True,
         help="",
     )
 
@@ -345,3 +365,13 @@ def print_inputs(inputs):
 
     print("---------------------------")
     print()
+
+
+def str2bool(value):
+    if isinstance(value, bool):
+        return value
+    if value.lower() in ("true", "t", "yes", "1"):
+        return True
+    elif value.lower() in ("false", "f", "no", "0"):
+        return False
+    raise argparse.ArgumentTypeError("Boolean value expected.")

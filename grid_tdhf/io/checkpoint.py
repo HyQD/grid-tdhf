@@ -47,8 +47,9 @@ class CheckpointManager:
         inputs = vars(self.inputs)
         metadata = {
             "ckpt_status": status,
-            "current_step": current_step,
             "current_time": current_time,
+            "current_step": current_step,
+            "total_steps": self.total_step,
         }
 
         info = {
