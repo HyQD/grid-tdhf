@@ -61,7 +61,7 @@ def main():
 
     sampler = setup_sampler(simulation_config, properties_computer)
     checkpoint_manager = setup_checkpoint_manager(
-        fileroot, sampler, inputs, simulation_info
+        fileroot, sampler, inputs, simulation_config, simulation_info
     )
 
     if inputs.load_run:
