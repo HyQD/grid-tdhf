@@ -26,7 +26,7 @@ class CheckpointManager:
             self._save_info(
                 current_step,
                 current_time,
-                status=f"incomplete ({current_step}/{self.total_steps})",
+                status=f"incomplete ({100*current_step/self.total_steps:.0f}%)",
             )
 
     def finalize(self, final_state, final_time, final_step):
@@ -35,9 +35,9 @@ class CheckpointManager:
         self._save_info(final_step, final_time, status="complete")
 
     def _save_state(self, state):
-        state = self.sampler.get_prepared_state()
-        state["u"] = state
-        self._atomic_savez(f"{self.direc}/{self.fileroot}_state", state)
+        states = self.sampler.get_prepared_state()
+        states["u"] = state
+        self._atomic_savez(f"{self.direc}/{self.fileroot}_state", states)
 
     def _save_samples(self):
         samples = self.sampler.get_prepared_samples()
@@ -47,9 +47,9 @@ class CheckpointManager:
         inputs = vars(self.inputs)
         metadata = {
             "ckpt_status": status,
-            "current_time": current_time,
             "current_step": current_step,
-            "total_steps": self.total_step,
+            "total_steps": self.total_steps,
+            "current_time": current_time,
         }
 
         info = {

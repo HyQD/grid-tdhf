@@ -1,6 +1,8 @@
 import argparse
 from types import SimpleNamespace
 
+from grid_tdhf.setup.load_run import load_info
+
 
 def parse_arguments(verbose=True):
     parser = argparse.ArgumentParser()
@@ -324,6 +326,13 @@ def parse_arguments(verbose=True):
         const=True,
         help="",
     )
+    parser.add_argument(
+        "--load-run",
+        dest="load_run",
+        type=str,
+        default=None,
+        help="",
+    )
 
     args = parser.parse_args()
 
@@ -335,10 +344,16 @@ def parse_arguments(verbose=True):
         inputs["nl"], inputs["l_max"], default_nl, "nl", "l_max", relation
     )
 
+    load_run = inputs["load_run"]
+
+    if load_run is not None:
+        inputs, _ = load_info(load_run)
+        inputs["load_run"] = load_run
+
     if verbose:
         print_inputs(inputs)
 
-    return SimpleNamespace(**vars(args))
+    return SimpleNamespace(**inputs)
 
 
 def resolve_linked_parameters(value_a, value_b, default_a, key_a, key_b, relation):

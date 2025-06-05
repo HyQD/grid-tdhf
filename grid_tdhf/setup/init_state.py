@@ -12,9 +12,11 @@ from grid_tdhf.setup.integrator import setup_integrator
 from grid_tdhf.setup.rhs import setup_rhs
 from grid_tdhf.computers.potential_computer import PotentialComputer
 from grid_tdhf.computers.properties_computer import PropertiesComputer
+from grid_tdhf.setup.load_run import load_state
 
 
 def setup_init_state(inputs, system_info, angular_arrays, radial_arrays, aux_arrays):
+    load_run = inputs.load_run
     init_state = inputs.init_state
 
     params = {
@@ -25,7 +27,11 @@ def setup_init_state(inputs, system_info, angular_arrays, radial_arrays, aux_arr
         **vars(aux_arrays),
     }
 
-    if init_state.lower() == "scf":
+    if load_run is not None:
+        u, _, _ = load_state(load_run)
+        return u
+
+    elif init_state.lower() == "scf":
         return run_scf(**select_keys(params, REQUIRED_SCF_PARAMS))
 
     elif init_state.lower() == "itp":
@@ -64,10 +70,5 @@ def setup_init_state(inputs, system_info, angular_arrays, radial_arrays, aux_arr
             potential_computer=potential_computer,
             properties_computer=properties_computer,
         )
-
     else:
         return load_state(inputs.init_state_file)
-
-
-def load_state(init_state_file):
-    return np.load(init_state_file)

@@ -17,12 +17,13 @@ from grid_tdhf.setup.mask import setup_mask
 from grid_tdhf.setup.checkpoint_manager import setup_checkpoint_manager
 from grid_tdhf.setup.simulation_config import generate_simulation_config
 from grid_tdhf.setup.freeze_config import generate_freeze_config
+from grid_tdhf.setup.load_run import resume_from_checkpoint
 
 
 def main():
     inputs = parse_arguments(verbose=False)
 
-    fileroot = str(uuid.uuid4())
+    fileroot = inputs.load_run if inputs.load_run is not None else str(uuid.uuid4())
 
     system_info = get_atomic_system_params(inputs)
 
@@ -62,6 +63,11 @@ def main():
     checkpoint_manager = setup_checkpoint_manager(
         fileroot, sampler, inputs, simulation_info
     )
+
+    if inputs.load_run:
+        simulation_info, sampler = resume_from_checkpoint(
+            fileroot, simulation_info, sampler
+        )
 
     run_simulation(
         integrator,

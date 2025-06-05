@@ -40,7 +40,9 @@ def setup_simulation(simulation_config):
     total_steps = int(total_time / simulation_config.dt)
 
     return SimpleNamespace(
+        init_step=0,
         total_steps=total_steps,
+        t0=simulation_config.t0,
     )
 
 

@@ -41,7 +41,6 @@ class Sampler:
 
         self.samples = defaultdict(list)
         self.sampled_states = []
-        self.time_points = []
         self.state_time_points = []
 
     def sample(self, state, t, count):
@@ -65,7 +64,7 @@ class Sampler:
             self.sampled_states.append(state.copy())
             self.state_time_points.append(t)
 
-        self.time_points.append(t)
+        self.samples["time_points"].append(t)
 
     def get_prepared_samples(self):
         result = {}
