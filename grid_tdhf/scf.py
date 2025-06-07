@@ -1,214 +1,5 @@
 import numpy as np
-from opt_einsum import contract
-
-from collections import defaultdict
-
-from grid_tdhf.properties import compute_norm
-
-
 from sympy.physics.quantum.cg import Wigner3j
-
-
-REQUIRED_SCF_PARAMS_notfinishedyet = [
-    "H_core_electron",
-    "H_core_positron",
-    "poisson_inverse",
-    "weights",
-    "has_positron",
-    "l_list",
-    "m_list",
-    "gaunt_dict",
-    "n_orbs",
-    "nl",
-    "nr",
-    "nL",
-]
-
-
-def run_scf_notfinishedyet(
-    *,
-    H_core_electron,
-    H_core_positron,
-    poisson_inverse,
-    gaunt_dict,
-    weights,
-    has_positron,
-    l_list,
-    m_list,
-    n_orbs,
-    nl,
-    nr,
-    nL,
-    u_in=None,
-    n_scf_it=80,
-    scf_alpha=0.6,
-    verbose=True,
-):
-    nl_gs = max(l_list) + 1
-
-    N_orbs = n_orbs + 1 if has_positron else n_orbs
-
-    if u_in is None:
-        u_in = get_init_guess(
-            H_core_electron,
-            H_core_positron,
-            poisson_inverse,
-            weights,
-            nr,
-            n_orbs,
-            N_orbs,
-            l_list,
-            nl_gs,
-            has_positron,
-        )
-
-    gm1, gm2 = setup_gaunt_arrays(n_orbs, nl_gs, nL, m_list, gaunt_dict)
-
-    for _ in range(n_scf_it):
-        rho_tilde = contract("olr->r", np.abs(u_in[:n_orbs]) ** 2)
-        v_H = np.dot(poisson_inverse[0, :, :], rho_tilde)
-
-        Fx = compute_spherical_exchange_potential(
-            u_in, poisson_inverse, gm1, gm2, has_positron
-        )
-
-        F = H_core_electron[:nl_gs, :, :] + 2 * np.diag(v_H) - Fx[:, :, :]
-
-        u_out, eps = assign_orbitals_and_energies(n_orbs, nl_gs, nr, l_list[:n_orbs], F)
-
-        norm = compute_norm(u_out, weights)
-        u_out /= np.sqrt(norm)[:, None, None]
-
-        u_in[:n_orbs] = (1 - scf_alpha) * u_in[:n_orbs] + scf_alpha * u_out
-
-        norm = compute_norm(u_in, weights)
-        u_in /= np.sqrt(norm)[:, None, None]
-
-        if verbose:
-            print(f"{eps}")
-
-        if has_positron:
-            rho_tilde = contract("olr->r", np.abs(u_in[:n_orbs]) ** 2)
-            v_H = np.dot(poisson_inverse[0, :, :], rho_tilde)
-
-            u_p_in = u_in[-1, 0]
-
-            eps_p, u_p = np.linalg.eigh(H_core_positron[0, :, :] - 2 * np.diag(v_H))
-
-            u_p_out = u_p[:, 0]
-
-            norm = compute_norm(u_p_out[None, None, :], weights)
-            u_p_out /= np.sqrt(norm[0])
-
-            u_p_in = (1 - scf_alpha) * u_p_in + scf_alpha * u_p_out
-
-            norm = compute_norm(u_p_in[None, None, :], weights)
-            u_p_in /= np.sqrt(norm[0])
-
-            u_in[-1] = u_p_in
-
-            if verbose:
-                print(f"{eps_p[0]}")
-
-    u_ = np.zeros((N_orbs, nl, nr), dtype=np.complex128)
-
-    u_[:, :nl_gs, :] = u_in
-
-    return u_
-
-
-def get_init_guess(
-    H_core_electron,
-    H_core_positron,
-    poisson_inverse,
-    weights,
-    nr,
-    n_orbs,
-    N_orbs,
-    l_list,
-    nl_gs,
-    has_positron,
-    verbose=True,
-):
-    u = np.zeros((N_orbs, nl_gs, nr))
-
-    u[:n_orbs], eps = assign_orbitals_and_energies(
-        n_orbs, nl_gs, nr, l_list[:n_orbs], H_core_electron
-    )
-
-    norm = compute_norm(u[:n_orbs], weights)
-
-    print(norm.shape)
-
-    u[:n_orbs] /= np.sqrt(norm)[:, None, None]
-
-    rho_tilde = contract("olr->r", np.abs(u[:n_orbs]) ** 2)
-    v_H = np.dot(poisson_inverse[0, :, :], rho_tilde)
-
-    if has_positron:
-        eps_p, u_p = np.linalg.eigh(H_core_positron[0, :, :] - 2 * np.diag(v_H))
-        u[-1, 0, :] = u_p[:, 0]
-
-    norm = compute_norm(u, weights)
-    u /= np.sqrt(norm)[:, None, None]
-
-    return u
-
-
-def setup_gaunt_arrays(n_orbs, nl_gs, nL, m_list, g_dict):
-    gm1 = np.zeros((n_orbs, nl_gs, nL, nl_gs))
-    gm2 = np.zeros((n_orbs, nl_gs, nL, nl_gs))
-
-    for i in range(n_orbs):
-        mi = m_list[i]
-        gm1[i] = (-1) ** (mi) * g_dict[(0, mi)][:nl_gs, :, :nl_gs]
-        gm2[i] = g_dict[(mi, 0)][:nl_gs, :, :nl_gs]
-
-    return gm1, gm2
-
-
-def compute_spherical_exchange_potential(u, poisson_inverse, gm1, gm2, has_positron):
-    u = u[:-1] if has_positron else u
-
-    VGx = (
-        4
-        * np.pi
-        * contract(
-            "Ila,Lab,Imb,InLl,ImLn->nab",
-            u,
-            poisson_inverse,
-            u.conj(),
-            gm1,
-            gm2,
-        )
-    )
-
-    return VGx
-
-
-def assign_orbitals_and_energies(n_orbs, nl_gs, nr, l_list, hamiltonian):
-    u = np.zeros((n_orbs, nl_gs, nr))
-    energies = np.zeros(n_orbs)
-
-    l_indices = get_l_indices(l_list)
-
-    for l, indices in l_indices.items():
-        eps, u_n = np.linalg.eigh(hamiltonian[l, :, :])
-
-        for i, orb_ind in enumerate(indices):
-            u[orb_ind, l, :] = u_n[:, i]
-            energies[orb_ind] = eps[i]
-
-    return u, energies
-
-
-def get_l_indices(l_list):
-    l_indices = defaultdict(list)
-
-    for ind, l in enumerate(l_list):
-        l_indices[l].append(ind)
-
-    return l_indices
 
 
 def coeff(l1, l2, l3):
@@ -220,25 +11,21 @@ def compute_radial_norm(u, weights):
     return np.sum(weights * u.conj() * u)
 
 
-#####
 def run_scf_he(
+    u,
     H_core_electron,
     poisson_inverse,
     weights,
     nr,
     nl,
-    u_in=None,
-    scf_n_it=20,
-    scf_alpha=0.6,
+    n_iter=20,
+    alpha=0.6,
     verbose=True,
     return_v_H=False,
 ):
-    if u_in is None:
-        u_in = init_guess_he(H_core_electron, weights, nr, verbose=verbose)
+    u_1s_in = u[0, 0, :]
 
-    u_1s_in = u_in[0, :]
-
-    for _ in range(scf_n_it):
+    for _ in range(n_iter):
         rho_tilde = np.abs(u_1s_in) ** 2
         v_H = np.dot(poisson_inverse[0, :, :], rho_tilde)
 
@@ -248,7 +35,7 @@ def run_scf_he(
 
         u_1s_out = u_n0[:, 0] / np.sqrt(compute_radial_norm(u_n0[:, 0], weights)).real
 
-        u_1s_in = (1 - scf_alpha) * u_1s_in + scf_alpha * u_1s_out
+        u_1s_in = (1 - alpha) * u_1s_in + alpha * u_1s_out
 
         u_1s_in /= np.sqrt(compute_radial_norm(u_1s_in, weights)).real
 
@@ -265,35 +52,25 @@ def run_scf_he(
 
 
 def run_scf_PsH(
+    u,
     H_core_electron,
     H_core_positron,
     poisson_inverse,
     weights,
     nr,
     nl,
-    u_in=None,
-    scf_n_it=20,
-    scf_alpha=0.6,
+    n_iter=20,
+    alpha=0.6,
     verbose=True,
     return_v_H=False,
     return_v_p=False,
 ):
-    if u_in is None:
-        u_in = init_guess_PsH(
-            H_core_electron,
-            H_core_positron,
-            poisson_inverse,
-            weights,
-            nr,
-            verbose=verbose,
-        )
-
-    u_1s_in = u_in[0, :]
-    u_Ps_in = u_in[-1, :]
+    u_1s_in = u[0, 0, :]
+    u_Ps_in = u[-1, 0, :]
 
     from grid_tdhf.potentials import compute_spherical_direct_potential
 
-    for _ in range(scf_n_it):
+    for _ in range(n_iter):
         rho_tilde = np.abs(u_1s_in) ** 2
         v_H = np.dot(poisson_inverse[0, :, :], rho_tilde)
 
@@ -312,7 +89,7 @@ def run_scf_PsH(
         eps_0, u_n0 = np.linalg.eigh(F)
 
         u_1s_out = u_n0[:, 0] / np.sqrt(compute_radial_norm(u_n0[:, 0], weights)).real
-        u_1s_in = (1 - scf_alpha) * u_1s_in + scf_alpha * u_1s_out
+        u_1s_in = (1 - alpha) * u_1s_in + alpha * u_1s_out
         u_1s_in /= np.sqrt(compute_radial_norm(u_1s_in, weights)).real
 
         rho_tilde = np.abs(u_1s_in) ** 2
@@ -322,7 +99,7 @@ def run_scf_PsH(
 
         u_Ps_out = u_p[:, 0] / np.sqrt(compute_radial_norm(u_p[:, 0], weights)).real
 
-        u_Ps_in = (1 - scf_alpha) * u_Ps_in + scf_alpha * u_Ps_out
+        u_Ps_in = (1 - alpha) * u_Ps_in + alpha * u_Ps_out
         u_Ps_in /= np.sqrt(compute_radial_norm(u_Ps_in, weights)).real
 
         if verbose:
@@ -344,23 +121,20 @@ def run_scf_PsH(
 
 
 def run_scf_be(
+    u,
     H_core_electron,
     poisson_inverse,
     weights,
     nr,
     nl,
-    u_in=None,
-    scf_n_it=20,
-    scf_alpha=0.8,
+    n_iter=20,
+    alpha=0.8,
     verbose=True,
 ):
-    if u_in is None:
-        u_in = init_guess_be(H_core_electron, weights, nr, verbose=verbose)
+    u_1s_in = u[0, 0, :]
+    u_2s_in = u[1, 0, :]
 
-    u_1s_in = u_in[0, :]
-    u_2s_in = u_in[1, :]
-
-    for _ in range(scf_n_it):
+    for _ in range(n_iter):
         rho_tilde = np.abs(u_1s_in) ** 2 + np.abs(u_2s_in) ** 2
         v_H = np.dot(poisson_inverse[0, :, :], rho_tilde)
 
@@ -376,8 +150,8 @@ def run_scf_be(
         u_1s_out = u_n0[:, 0] / np.sqrt(compute_radial_norm(u_n0[:, 0], weights)).real
         u_2s_out = u_n0[:, 1] / np.sqrt(compute_radial_norm(u_n0[:, 1], weights)).real
 
-        u_1s_in = (1 - scf_alpha) * u_1s_in + scf_alpha * u_1s_out
-        u_2s_in = (1 - scf_alpha) * u_2s_in + scf_alpha * u_2s_out
+        u_1s_in = (1 - alpha) * u_1s_in + alpha * u_1s_out
+        u_2s_in = (1 - alpha) * u_2s_in + alpha * u_2s_out
 
         u_1s_in /= np.sqrt(compute_radial_norm(u_1s_in, weights)).real
         u_2s_in /= np.sqrt(compute_radial_norm(u_2s_in, weights)).real
@@ -393,27 +167,24 @@ def run_scf_be(
 
 
 def run_scf_ne(
+    u,
     H_core_electron,
     poisson_inverse,
     weights,
     nr,
     nl,
-    u_in=None,
-    scf_n_it=20,
-    scf_alpha=0.8,
+    n_iter=20,
+    alpha=0.8,
     verbose=True,
 ):
-    if u_in is None:
-        u_in = init_guess_ne(H_core_electron, weights, nr, verbose=verbose)
-
-    u_1s_in = u_in[0, :]
-    u_2s_in = u_in[1, :]
-    u_2p_in = u_in[2, :]
+    u_1s_in = u[0, 0, :]
+    u_2s_in = u[1, 0, :]
+    u_2p_in = u[3, 1, :]
 
     Fx = np.zeros((2, nr, nr), dtype=np.complex128)
     F = np.zeros((2, nr, nr), dtype=np.complex128)
 
-    for _ in range(scf_n_it):
+    for _ in range(n_iter):
         rho_tilde = (
             np.abs(u_1s_in) ** 2 + np.abs(u_2s_in) ** 2 + 3 * np.abs(u_2p_in) ** 2
         )
@@ -459,9 +230,9 @@ def run_scf_ne(
         u_2s_out = u_n0[:, 1] / np.sqrt(compute_radial_norm(u_n0[:, 1], weights)).real
         u_2p_out = u_n1[:, 0] / np.sqrt(compute_radial_norm(u_n1[:, 0], weights)).real
 
-        u_1s_in = (1 - scf_alpha) * u_1s_in + scf_alpha * u_1s_out
-        u_2s_in = (1 - scf_alpha) * u_2s_in + scf_alpha * u_2s_out
-        u_2p_in = (1 - scf_alpha) * u_2p_in + scf_alpha * u_2p_out
+        u_1s_in = (1 - alpha) * u_1s_in + alpha * u_1s_out
+        u_2s_in = (1 - alpha) * u_2s_in + alpha * u_2s_out
+        u_2p_in = (1 - alpha) * u_2p_in + alpha * u_2p_out
 
         u_1s_in = u_1s_in / np.sqrt(compute_radial_norm(u_1s_in, weights)).real
         u_2s_in = u_2s_in / np.sqrt(compute_radial_norm(u_2s_in, weights)).real
@@ -481,29 +252,26 @@ def run_scf_ne(
 
 
 def run_scf_ar(
+    u,
     H_core_electron,
     poisson_inverse,
     weights,
     nr,
     nl,
-    u_in=None,
-    scf_n_it=20,
-    scf_alpha=0.8,
+    n_iter=20,
+    alpha=0.8,
     verbose=True,
 ):
-    if u_in is None:
-        u_in = init_guess_ar(H_core_electron, weights, nr, verbose=verbose)
-
-    u_1s_in = u_in[0, :]
-    u_2s_in = u_in[1, :]
-    u_3s_in = u_in[2, :]
-    u_2p_in = u_in[3, :]
-    u_3p_in = u_in[4, :]
+    u_1s_in = u[0, 0, :]
+    u_2s_in = u[1, 0, :]
+    u_3s_in = u[2, 0, :]
+    u_2p_in = u[4, 1, :]
+    u_3p_in = u[7, 1, :]
 
     Fx = np.zeros((2, nr, nr), dtype=np.complex128)
     F = np.zeros((2, nr, nr), dtype=np.complex128)
 
-    for _ in range(scf_n_it):
+    for _ in range(n_iter):
         rho_tilde = (
             np.abs(u_1s_in) ** 2
             + np.abs(u_2s_in) ** 2
@@ -566,11 +334,11 @@ def run_scf_ar(
         u_2p_out = u_n1[:, 0] / np.sqrt(compute_radial_norm(u_n1[:, 0], weights)).real
         u_3p_out = u_n1[:, 1] / np.sqrt(compute_radial_norm(u_n1[:, 1], weights)).real
 
-        u_1s_in = (1 - scf_alpha) * u_1s_in + scf_alpha * u_1s_out
-        u_2s_in = (1 - scf_alpha) * u_2s_in + scf_alpha * u_2s_out
-        u_3s_in = (1 - scf_alpha) * u_3s_in + scf_alpha * u_3s_out
-        u_2p_in = (1 - scf_alpha) * u_2p_in + scf_alpha * u_2p_out
-        u_3p_in = (1 - scf_alpha) * u_3p_in + scf_alpha * u_3p_out
+        u_1s_in = (1 - alpha) * u_1s_in + alpha * u_1s_out
+        u_2s_in = (1 - alpha) * u_2s_in + alpha * u_2s_out
+        u_3s_in = (1 - alpha) * u_3s_in + alpha * u_3s_out
+        u_2p_in = (1 - alpha) * u_2p_in + alpha * u_2p_out
+        u_3p_in = (1 - alpha) * u_3p_in + alpha * u_3p_out
 
         u_1s_in = u_1s_in / np.sqrt(compute_radial_norm(u_1s_in, weights)).real
         u_2s_in = u_2s_in / np.sqrt(compute_radial_norm(u_2s_in, weights)).real
@@ -593,38 +361,28 @@ def run_scf_ar(
 
 
 def run_scf_PsCl(
+    u,
     H_core_electron,
     H_core_positron,
     poisson_inverse,
     weights,
     nr,
     nl,
-    u_in=None,
-    scf_n_it=20,
-    scf_alpha=0.8,
+    n_iter=20,
+    alpha=0.8,
     verbose=True,
 ):
-    if u_in is None:
-        u_in = init_guess_PsCl(
-            H_core_electron,
-            H_core_positron,
-            poisson_inverse,
-            weights,
-            nr,
-            verbose=verbose,
-        )
-
-    u_1s_in = u_in[0, :]
-    u_2s_in = u_in[1, :]
-    u_3s_in = u_in[2, :]
-    u_2p_in = u_in[3, :]
-    u_3p_in = u_in[4, :]
-    u_Ps_in = u_in[-1, :]
+    u_1s_in = u[0, 0, :]
+    u_2s_in = u[1, 0, :]
+    u_3s_in = u[2, 0, :]
+    u_2p_in = u[4, 1, :]
+    u_3p_in = u[7, 1, :]
+    u_Ps_in = u[-1, 0, :]
 
     Fx = np.zeros((2, nr, nr), dtype=np.complex128)
     F = np.zeros((2, nr, nr), dtype=np.complex128)
 
-    for _ in range(scf_n_it):
+    for _ in range(n_iter):
         rho_tilde = (
             np.abs(u_1s_in) ** 2
             + np.abs(u_2s_in) ** 2
@@ -690,11 +448,11 @@ def run_scf_PsCl(
         u_2p_out = u_n1[:, 0] / np.sqrt(compute_radial_norm(u_n1[:, 0], weights)).real
         u_3p_out = u_n1[:, 1] / np.sqrt(compute_radial_norm(u_n1[:, 1], weights)).real
 
-        u_1s_in = (1 - scf_alpha) * u_1s_in + scf_alpha * u_1s_out
-        u_2s_in = (1 - scf_alpha) * u_2s_in + scf_alpha * u_2s_out
-        u_3s_in = (1 - scf_alpha) * u_3s_in + scf_alpha * u_3s_out
-        u_2p_in = (1 - scf_alpha) * u_2p_in + scf_alpha * u_2p_out
-        u_3p_in = (1 - scf_alpha) * u_3p_in + scf_alpha * u_3p_out
+        u_1s_in = (1 - alpha) * u_1s_in + alpha * u_1s_out
+        u_2s_in = (1 - alpha) * u_2s_in + alpha * u_2s_out
+        u_3s_in = (1 - alpha) * u_3s_in + alpha * u_3s_out
+        u_2p_in = (1 - alpha) * u_2p_in + alpha * u_2p_out
+        u_3p_in = (1 - alpha) * u_3p_in + alpha * u_3p_out
 
         u_1s_in /= np.sqrt(compute_radial_norm(u_1s_in, weights)).real
         u_2s_in /= np.sqrt(compute_radial_norm(u_2s_in, weights)).real
@@ -716,7 +474,7 @@ def run_scf_PsCl(
 
         u_Ps_out = u_p[:, 0] / np.sqrt(compute_radial_norm(u_p[:, 0], weights)).real
 
-        u_Ps_in = (1 - scf_alpha) * u_Ps_in + scf_alpha * u_Ps_out
+        u_Ps_in = (1 - alpha) * u_Ps_in + alpha * u_Ps_out
 
         u_Ps_in /= np.sqrt(compute_radial_norm(u_Ps_in, weights)).real
 
@@ -741,133 +499,8 @@ def run_scf_PsCl(
     return u
 
 
-def init_guess_he(H_core_electron, weights, nr, verbose=True):
-    eps_0, u_n0 = np.linalg.eigh(H_core_electron[0, :, :])
-
-    u_1s_in = u_n0[:, 0] / np.sqrt(compute_radial_norm(u_n0[:, 0], weights)).real
-
-    print("-----", u_1s_in[0])
-
-    u_in = np.zeros((1, nr), dtype=np.complex128)
-    u_in[0, :] = u_1s_in
-
-    return u_in
-
-
-def init_guess_PsH(
-    H_core_electron, H_core_positron, poisson_inverse, weights, nr, verbose=True
-):
-    eps_0, u_n0 = np.linalg.eigh(H_core_electron[0, :, :])
-    print("Init eigvals:", eps_0[0])
-
-    u_1s_in = u_n0[:, 0] / np.sqrt(compute_radial_norm(u_n0[:, 0], weights)).real
-
-    rho_tilde = np.abs(u_1s_in) ** 2
-
-    v_H = np.dot(poisson_inverse[0, :, :], rho_tilde)
-
-    eps_p, u_p = np.linalg.eigh(H_core_positron[0, :, :] - 2 * np.diag(v_H))
-
-    u_Ps_in = u_p[:, 0] / np.sqrt(compute_radial_norm(u_p[:, 0], weights)).real
-
-    u_in = np.zeros((2, nr), dtype=np.complex128)
-    u_in[0, :] = u_1s_in
-    u_in[1, :] = u_Ps_in
-
-    return u_in
-
-
-def init_guess_be(H_core_electron, weights, nr, verbose=True):
-    eps_0, u_n0 = np.linalg.eigh(H_core_electron[0, :, :])
-    print("Init eigvals:", eps_0[0], eps_0[1])
-
-    u_1s_in = u_n0[:, 0] / np.sqrt(compute_radial_norm(u_n0[:, 0], weights)).real
-    u_2s_in = u_n0[:, 1] / np.sqrt(compute_radial_norm(u_n0[:, 1], weights)).real
-
-    u_in = np.zeros((2, nr), dtype=np.complex128)
-    u_in[0, :] = u_1s_in
-    u_in[1, :] = u_2s_in
-
-    return u_in
-
-
-def init_guess_ne(H_core_electron, weights, nr, verbose=True):
-    eps_0, u_n0 = np.linalg.eigh(H_core_electron[0, :, :])
-    eps_1, u_n1 = np.linalg.eigh(H_core_electron[1, :, :])
-    print("Init eigvals:", eps_0[0], eps_0[1], eps_1[0])
-
-    u_1s_in = u_n0[:, 0] / np.sqrt(compute_radial_norm(u_n0[:, 0], weights)).real
-    u_2s_in = u_n0[:, 1] / np.sqrt(compute_radial_norm(u_n0[:, 1], weights)).real
-    u_2p_in = u_n1[:, 0] / np.sqrt(compute_radial_norm(u_n1[:, 0], weights)).real
-
-    u_in = np.zeros((3, nr), dtype=np.complex128)
-    u_in[0, :] = u_1s_in
-    u_in[1, :] = u_2s_in
-    u_in[2, :] = u_2p_in
-
-    return u_in
-
-
-def init_guess_ar(H_core_electron, weights, nr, verbose=True):
-    eps_0, u_n0 = np.linalg.eigh(H_core_electron[0, :, :])
-    eps_1, u_n1 = np.linalg.eigh(H_core_electron[1, :, :])
-    print("Init eigvals:", eps_0[0], eps_0[1], eps_0[2], eps_1[0], eps_1[1])
-
-    u_1s_in = u_n0[:, 0] / np.sqrt(compute_radial_norm(u_n0[:, 0], weights)).real
-    u_2s_in = u_n0[:, 1] / np.sqrt(compute_radial_norm(u_n0[:, 1], weights)).real
-    u_3s_in = u_n0[:, 2] / np.sqrt(compute_radial_norm(u_n0[:, 2], weights)).real
-    u_2p_in = u_n1[:, 0] / np.sqrt(compute_radial_norm(u_n1[:, 0], weights)).real
-    u_3p_in = u_n1[:, 1] / np.sqrt(compute_radial_norm(u_n1[:, 1], weights)).real
-
-    u_in = np.zeros((5, nr), dtype=np.complex128)
-    u_in[0, :] = u_1s_in
-    u_in[1, :] = u_2s_in
-    u_in[2, :] = u_3s_in
-    u_in[3, :] = u_2p_in
-    u_in[4, :] = u_3p_in
-
-    return u_in
-
-
-def init_guess_PsCl(
-    H_core_electron, H_core_positron, poisson_inverse, weights, nr, verbose=True
-):
-    eps_0, u_n0 = np.linalg.eigh(H_core_electron[0, :, :])
-    eps_1, u_n1 = np.linalg.eigh(H_core_electron[1, :, :])
-    print("Init eigvals:", eps_0[0], eps_0[1], eps_0[2], eps_1[0], eps_1[1])
-
-    u_1s_in = u_n0[:, 0] / np.sqrt(compute_radial_norm(u_n0[:, 0], weights)).real
-    u_2s_in = u_n0[:, 1] / np.sqrt(compute_radial_norm(u_n0[:, 1], weights)).real
-    u_3s_in = u_n0[:, 2] / np.sqrt(compute_radial_norm(u_n0[:, 2], weights)).real
-    u_2p_in = u_n1[:, 0] / np.sqrt(compute_radial_norm(u_n1[:, 0], weights)).real
-    u_3p_in = u_n1[:, 1] / np.sqrt(compute_radial_norm(u_n1[:, 1], weights)).real
-
-    rho_tilde = (
-        np.abs(u_1s_in) ** 2
-        + np.abs(u_2s_in) ** 2
-        + np.abs(u_3s_in) ** 2
-        + 3 * np.abs(u_2p_in) ** 2
-        + 3 * np.abs(u_3p_in) ** 2
-    )
-
-    v_H = np.dot(poisson_inverse[0, :, :], rho_tilde)
-
-    eps_p, u_p = np.linalg.eigh(H_core_positron[0, :, :] - 2 * np.diag(v_H))
-
-    u_Ps_in = u_p[:, 0] / np.sqrt(compute_radial_norm(u_p[:, 0], weights)).real
-
-    u_in = np.zeros((6, nr), dtype=np.complex128)
-    u_in[0, :] = u_1s_in
-    u_in[1, :] = u_2s_in
-    u_in[2, :] = u_3s_in
-    u_in[3, :] = u_2p_in
-    u_in[4, :] = u_3p_in
-    u_in[5, :] = u_Ps_in
-
-    return u_in
-
-
 REQUIRED_SCF_PARAMS = [
+    "u",
     "atom",
     "H_core_electron",
     "H_core_positron",
@@ -875,11 +508,15 @@ REQUIRED_SCF_PARAMS = [
     "weights",
     "nr",
     "nl",
+    "n_iter",
+    "alpha",
+    "verbose",
 ]
 
 
 def run_scf(
     *,
+    u,
     atom,
     H_core_electron,
     H_core_positron,
@@ -887,110 +524,109 @@ def run_scf(
     weights,
     nr,
     nl,
-    u_in=None,
-    n_scf_iter=60,
-    scf_alpha=0.8,
+    n_iter=60,
+    alpha=0.8,
     verbose=True,
 ):
     atom = atom.lower()
     if atom == "he":
         return run_scf_he(
+            u,
             H_core_electron,
             poisson_inverse,
             weights,
             nr,
             nl,
-            u_in=u_in,
-            scf_n_it=n_scf_iter,
-            scf_alpha=scf_alpha,
+            n_iter=n_iter,
+            alpha=alpha,
             verbose=verbose,
         )
     elif atom == "be":
         return run_scf_be(
+            u,
             H_core_electron,
             poisson_inverse,
             weights,
             nr,
             nl,
-            u_in=u_in,
-            scf_n_it=n_scf_iter,
-            scf_alpha=scf_alpha,
+            n_iter=n_iter,
+            alpha=alpha,
             verbose=verbose,
         )
     elif atom == "ne":
         return run_scf_ne(
+            u,
             H_core_electron,
             poisson_inverse,
             weights,
             nr,
             nl,
-            u_in=u_in,
-            scf_n_it=n_scf_iter,
-            scf_alpha=scf_alpha,
+            n_iter=n_iter,
+            alpha=alpha,
             verbose=verbose,
         )
     elif atom == "ar":
         return run_scf_ar(
+            u,
             H_core_electron,
             poisson_inverse,
             weights,
             nr,
             nl,
-            u_in=u_in,
-            scf_n_it=n_scf_iter,
-            scf_alpha=scf_alpha,
+            n_iter=n_iter,
+            alpha=alpha,
             verbose=verbose,
         )
     elif atom == "psh":
         return run_scf_PsH(
+            u,
             H_core_electron,
             H_core_positron,
             poisson_inverse,
             weights,
             nr,
             nl,
-            u_in=u_in,
-            scf_n_it=n_scf_iter,
-            scf_alpha=scf_alpha,
+            n_iter=n_iter,
+            alpha=alpha,
             verbose=verbose,
         )
     elif atom == "psli":
         return run_scf_PsLi(
+            u,
             H_core_electron,
             H_core_positron,
             poisson_inverse,
             weights,
             nr,
             nl,
-            u_in=u_in,
-            scf_n_it=n_scf_iter,
-            scf_alpha=scf_alpha,
+            n_iter=n_iter,
+            alpha=alpha,
             verbose=verbose,
         )
     elif atom == "psf":
         return run_scf_PsF(
+            u,
             H_core_electron,
             H_core_positron,
             poisson_inverse,
             weights,
             nr,
             nl,
-            u_in=u_in,
-            scf_n_it=n_scf_iter,
-            scf_alpha=scf_alpha,
+            n_iter=n_iter,
+            alpha=alpha,
             verbose=verbose,
         )
     elif atom == "pscl":
         return run_scf_PsCl(
+            u,
             H_core_electron,
             H_core_positron,
             poisson_inverse,
             weights,
             nr,
             nl,
-            u_in=u_in,
-            scf_n_it=n_scf_iter,
-            scf_alpha=scf_alpha,
+            n_iter=n_iter,
+            alpha=alpha,
             verbose=verbose,
         )
     else:

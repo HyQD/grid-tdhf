@@ -3,12 +3,12 @@ from grid_tdhf.potentials import compute_spherical_direct_potential
 import numpy as np
 
 
-def generate_freeze_config(u, inputs, system_info, aux_arrays):
+def get_freeze_overrides(u, system_config):
     overrides = {}
 
-    if inputs.frozen_electrons:
-        poisson_inverse = aux_arrays.poisson_inverse
-        coulomb_potential = aux_arrays.coulomb_potential
+    if system_config.frozen_electrons:
+        poisson_inverse = system_config.poisson_inverse
+        coulomb_potential = system_config.coulomb_potential
 
         V_d_electron = compute_spherical_direct_potential(u[:-1], poisson_inverse)
 
@@ -21,15 +21,16 @@ def generate_freeze_config(u, inputs, system_info, aux_arrays):
                 "N_orbs": 1,
                 "m_list": [0],
                 "m_max": 0,
-                "u": u[-1:],
+                "u": u[-1:].copy(),
+                "full_state": u,
                 "active_orbitals": active_orbitals,
                 "coulomb_potential": coulomb_potential + 2 * V_d_electron,
             }
         )
 
-    elif inputs.frozen_positron:
-        poisson_inverse = aux_arrays.poisson_inverse
-        coulomb_potential = aux_arrays.coulomb_potential
+    elif system_config.frozen_positron:
+        poisson_inverse = system_config.poisson_inverse
+        coulomb_potential = system_config.coulomb_potential
 
         V_d_positron = compute_spherical_direct_potential(u[-1:], poisson_inverse)
 
@@ -39,9 +40,10 @@ def generate_freeze_config(u, inputs, system_info, aux_arrays):
         overrides.update(
             {
                 "has_positron": False,
-                "N_orbs": system_info.n_orbs,
-                "m_list": system_info.m_list[:-1],
-                "u": u[:-1],
+                "N_orbs": system_config.n_orbs,
+                "m_list": system_config.m_list[:-1],
+                "u": u[:-1].copy(),
+                "full_state": u,
                 "active_orbitals": active_orbitals,
                 "coulomb_potential": coulomb_potential - V_d_positron,
             }

@@ -1,11 +1,13 @@
 import importlib
 
-from grid_tdhf.utils import select_keys
+from grid_tdhf.utils import resolve_required_params
 
 from scipy.sparse.linalg import LinearOperator
 
 
-def setup_preconditioner(simulation_config, imaginary=False):
+def setup_preconditioner(
+    simulation_config, imaginary=False, used_inputs=None, param_mapping=None
+):
     N_orbs = simulation_config.N_orbs
     nl = simulation_config.nl
     nr = simulation_config.nr
@@ -17,13 +19,9 @@ def setup_preconditioner(simulation_config, imaginary=False):
     module = importlib.import_module("grid_tdhf.preconditioners")
     Preconditioner = getattr(module, preconditioner_name)
 
-    missing_params = Preconditioner.required_params - params.keys() - {"imaginary"}
-    if missing_params:
-        raise ValueError(
-            f"Missing required parameters for {preconditioner_name}: {', '.join(sorted(missing_params))}"
-        )
-
-    preconditioner_args = select_keys(params, Preconditioner.required_params)
+    preconditioner_args = resolve_required_params(
+        Preconditioner.required_params, params, used_inputs, param_mapping
+    )
 
     preconditioner = Preconditioner(**preconditioner_args, imaginary=imaginary)
 

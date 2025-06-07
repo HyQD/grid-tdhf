@@ -9,6 +9,8 @@ def setup_rhs(
     simulation_config,
     potential_computer,
     laser=None,
+    used_inputs=None,
+    param_mapping=None,
 ):
 
     params = {**vars(simulation_config)}
@@ -22,6 +24,8 @@ def setup_rhs(
     kwargs = {"core": core, "mean_field": mean_field}
 
     if laser is not None:
+        if used_inputs is None:
+            used_inputs = used_inputs.add(simulation_config.gauge)
         if simulation_config.gauge == "velocity":
             from grid_tdhf.rhs import RHSDipoleVelocityGauge as RHSDipole
         elif simulation_config.gauge == "length":

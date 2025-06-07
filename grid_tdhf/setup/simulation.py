@@ -1,7 +1,7 @@
 import numpy as np
 from types import SimpleNamespace
 
-from grid_tdhf.utils import select_keys
+from grid_tdhf.utils import resolve_required_params
 from grid_tdhf.time_propagation.real import (
     run_time_propagation,
     REQUIRED_TIME_PROPAGATION_PARAMS,
@@ -19,10 +19,14 @@ def run_simulation(
     checkpoint_manager,
     simulation_config,
     simulation_info,
+    used_inputs=None,
+    param_mapping=None,
 ):
     params = {**vars(simulation_config), **vars(simulation_info)}
 
-    simulation_params = select_keys(params, REQUIRED_TIME_PROPAGATION_PARAMS)
+    simulation_params = resolve_required_params(
+        REQUIRED_TIME_PROPAGATION_PARAMS, params, used_inputs, param_mapping
+    )
 
     run_time_propagation(
         **simulation_params,

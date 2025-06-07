@@ -15,13 +15,15 @@ from grid_tdhf.setup.sampler import setup_sampler
 from grid_tdhf.setup.simulation import setup_simulation, run_simulation
 from grid_tdhf.setup.mask import setup_mask
 from grid_tdhf.setup.checkpoint_manager import setup_checkpoint_manager
-from grid_tdhf.setup.simulation_config import generate_simulation_config
-from grid_tdhf.setup.freeze_config import generate_freeze_config
 from grid_tdhf.setup.load_run import resume_from_checkpoint
+from grid_tdhf.config.system import generate_system_config, generate_runtime_config
+from grid_tdhf.config.simulation import get_simulation_overrides
+from grid_tdhf.config.freeze import get_freeze_overrides
 
 
 def main():
     inputs = parse_arguments(verbose=False)
+    used_inputs = set()
 
     fileroot = inputs.load_run if inputs.load_run is not None else str(uuid.uuid4())
 
@@ -31,31 +33,31 @@ def main():
     radial_arrays = setup_radial_arrays(inputs)
     aux_arrays = setup_auxiliary_arrays(inputs, system_info, radial_arrays)
 
-    u = setup_init_state(inputs, system_info, angular_arrays, radial_arrays, aux_arrays)
+    system_config = generate_system_config(
+        inputs, system_info, angular_arrays, radial_arrays, aux_arrays
+    )
+
+    u = setup_init_state(system_config, used_inputs)
 
     if inputs.gs_only:
         return
 
-    config_overrides = generate_freeze_config(u, inputs, system_info, aux_arrays)
-    simulation_config = generate_simulation_config(
-        u,
-        inputs,
-        system_info,
-        angular_arrays,
-        radial_arrays,
-        aux_arrays,
-        overrides=config_overrides,
-    )
+    simulation_overrides = get_simulation_overrides(u, system_config)
+    freeze_overrides = get_freeze_overrides(u, system_config)
+    overrides = {**simulation_overrides, **freeze_overrides}
+    simulation_config = generate_runtime_config(system_config, overrides)
 
-    integrator = setup_integrator(simulation_config)
+    integrator = setup_integrator(simulation_config, used_inputs=used_inputs)
 
     potential_computer = PotentialComputer(simulation_config)
     properties_computer = PropertiesComputer(simulation_config, potential_computer)
 
-    laser = setup_laser(simulation_config)
-    rhs = setup_rhs(simulation_config, potential_computer, laser)
+    laser = setup_laser(simulation_config, used_inputs=used_inputs)
+    rhs = setup_rhs(
+        simulation_config, potential_computer, laser, used_inputs=used_inputs
+    )
 
-    mask = setup_mask(simulation_config)
+    mask = setup_mask(simulation_config, used_inputs=used_inputs)
 
     simulation_info = setup_simulation(simulation_config)
 

@@ -201,6 +201,14 @@ def parse_arguments(verbose=True):
         help="",
     )
     parser.add_argument(
+        "-itp-dt",
+        "-itp_dt",
+        dest="itp_dt",
+        type=float,
+        default=0.1,
+        help="",
+    )
+    parser.add_argument(
         "-max-itp-iter",
         "-max_itp_iter",
         dest="itp_max_iter",

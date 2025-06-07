@@ -1,26 +1,34 @@
-from grid_tdhf.utils import select_keys
+from grid_tdhf.utils import resolve_required_params
 from grid_tdhf.masks import MASK_REGISTRY
 
 
-def setup_mask(simulation_config):
+def setup_mask(simulation_config, used_inputs=None, param_mapping=None):
+    if param_mapping is None:
+        param_mapping = {
+            "r0": "mask_r0",
+            "n": "mask_n",
+        }
+
     mask_name = simulation_config.mask_name
 
     if mask_name == "no-mask":
         return None
 
-    params = {**vars(simulation_config)}
-
     if mask_name not in MASK_REGISTRY:
         raise ValueError(f"Mask {mask_name} is not available.")
+
+    params = {**vars(simulation_config)}
 
     entry = MASK_REGISTRY[mask_name]
     mask_func = entry["func"]
     required_params = entry["required_params"]
 
-    missing = required_params - params.keys()
+    mask_args = resolve_required_params(
+        required_params, params, used_inputs, param_mapping
+    )
+
+    missing = required_params - mask_args.keys()
     if missing:
         raise ValueError(f"Missing required mask parameters: {missing}")
-
-    mask_args = select_keys(params, required_params)
 
     return mask_func(**mask_args)

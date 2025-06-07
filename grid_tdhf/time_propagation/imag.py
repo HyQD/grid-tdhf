@@ -14,8 +14,8 @@ REQUIRED_IMAG_TIME_PROPAGATION_PARAMS = {
     "n_orbs",
     "m_list",
     "weights",
-    "itp_max_iter",
-    "itp_conv_tol",
+    "max_iter",
+    "conv_tol",
 }
 
 
@@ -29,8 +29,8 @@ def run_imag_time_propagation(
     n_orbs,
     m_list,
     weights,
-    itp_max_iter,
-    itp_conv_tol,
+    max_iter,
+    conv_tol,
 ):
     potential_computer.set_state(u)
     potential_computer.compute_direct_potential()
@@ -41,7 +41,7 @@ def run_imag_time_propagation(
     print("Initial energy:", old_energy.real)
     print("initial_orbital_energies:", old_orbital_energies.real)
 
-    for i in range(itp_max_iter):
+    for i in range(max_iter):
         u = integrator(u, 0, dt, rhs)
 
         u[:n_orbs] = orthonormalize_set(u[:n_orbs], m_list, weights)
@@ -59,7 +59,7 @@ def run_imag_time_propagation(
         print("Energy:", new_energy.real)
         print("Orbital energies:", new_orbital_energies.real)
 
-        if abs(delta_energy) < itp_conv_tol:
+        if abs(delta_energy) < conv_tol:
             break
 
         old_energy = new_energy
