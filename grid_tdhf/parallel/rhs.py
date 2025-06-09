@@ -19,7 +19,6 @@ class CompositeRHS:
 
 class RHSCore:
     required_params = {
-        "n_orbs",
         "nl",
         "nr",
         "D2",
@@ -27,11 +26,11 @@ class RHSCore:
         "centrifugal_potential_l",
         "centrifugal_potential_r",
         "has_positron",
+        "is_positron",
     }
 
     def __init__(
         self,
-        n_orbs,
         nl,
         nr,
         D2,
@@ -39,102 +38,95 @@ class RHSCore:
         centrifugal_potential_l,
         centrifugal_potential_r,
         has_positron=False,
+        is_positron=False,
     ):
         self.T_D2 = -(1 / 2) * D2
         self.coulomb_potential = coulomb_potential
         self.centrifugal_potential_l = centrifugal_potential_l
         self.centrifugal_potential_r = centrifugal_potential_r
-        self.n_orbs = n_orbs
         self.nl = nl
         self.nr = nr
         self.has_positron = has_positron
-        self.N_orbs = n_orbs + 1 if has_positron else n_orbs
+        self.is_positron = is_positron
 
     def __call__(self, u, t, ravel=True):
-        u = u.reshape(self.N_orbs, self.nl, self.nr)
-        u_new = np.zeros((self.N_orbs, self.nl, self.nr), dtype=np.complex128)
+        u = u.reshape(1, self.nl, self.nr)
+        u_new = np.zeros((1, self.nl, self.nr), dtype=np.complex128)
 
-        for p in range(self.n_orbs):
-            u_new[p] += contract("Ij, ij->Ii", u[p], self.T_D2)
-            u_new[p] += contract("Ik, k->Ik", u[p], self.coulomb_potential)
-            u_temp = contract("I, Ii->Ii", self.centrifugal_potential_l, u[p])
-            u_new[p] += contract("i, Ii->Ii", self.centrifugal_potential_r, u_temp)
+        if not self.is_positron:
+            u_new[0] += contract("Ij, ij->Ii", u[0], self.T_D2)
+            u_new[0] += contract("Ik, k->Ik", u[0], self.coulomb_potential)
+            u_temp = contract("I, Ii->Ii", self.centrifugal_potential_l, u[0])
+            u_new[0] += contract("i, Ii->Ii", self.centrifugal_potential_r, u_temp)
 
-        if self.has_positron:
-            u_new[-1] += contract("Ij, ij->Ii", u[-1], self.T_D2)
-            u_new[-1] -= contract("Ik, k->Ik", u[-1], self.coulomb_potential)
-            u_temp = contract("I, Ii->Ii", self.centrifugal_potential_l, u[-1])
-            u_new[-1] += contract("i, Ii->Ii", self.centrifugal_potential_r, u_temp)
+        else:
+            u_new[0] += contract("Ij, ij->Ii", u[0], self.T_D2)
+            u_new[0] -= contract("Ik, k->Ik", u[0], self.coulomb_potential)
+            u_temp = contract("I, Ii->Ii", self.centrifugal_potential_l, u[0])
+            u_new[0] += contract("i, Ii->Ii", self.centrifugal_potential_r, u_temp)
 
         return u_new.ravel() if ravel else u_new
-
-
-import time
 
 
 class RHSMeanField:
     required_params = {
         "potential_computer",
-        "n_orbs",
+        "n_orbs_tot",
         "nl",
         "nr",
-        "nL",
         "m_list",
         "has_positron",
+        "is_positron",
     }
 
     def __init__(
         self,
         potential_computer,
-        n_orbs,
+        n_orbs_tot,
         nl,
         nr,
-        nL,
         m_list,
         has_positron=False,
+        is_positron=False,
     ):
         self.potential_computer = potential_computer
-        self.n_orbs = n_orbs
+        self.n_orbs_tot = n_orbs_tot
         self.nl = nl
         self.nr = nr
         self.m_list = m_list
-        self.nL = nL
         self.has_positron = has_positron
-        self.N_orbs = n_orbs + 1 if has_positron else n_orbs
-        self.single_orbital = False if n_orbs > 1 else True
+        self.is_positron = is_positron
+        self.single_orbital = False if n_orbs_tot > 1 else True
 
     def __call__(self, u, t, ravel=True):
-        u = u.reshape(self.N_orbs, self.nl, self.nr)
-        u_new = np.zeros((self.N_orbs, self.nl, self.nr), dtype=np.complex128)
+        u = u.reshape(1, self.nl, self.nr)
+        u_new = np.zeros((1, self.nl, self.nr), dtype=np.complex128)
 
-        tic1 = time.time()
-        if not self.single_orbital:
+        if not self.single_orbital or self.is_positron:
             self.potential_computer.compute_exchange_potential(u)
-        tic2 = time.time()
 
         V_d_electron = self.potential_computer.V_d_electron
         V_d_positron = self.potential_computer.V_d_positron
         V_x = self.potential_computer.V_x
         u_bar = self.potential_computer.u
 
-        for p in range(self.n_orbs):
-            m = self.m_list[p]
+        if not self.is_positron:
+            m = self.m_list[0]
 
             if self.single_orbital:
-                u_new[p] += contract("ijr,jr->ir", V_d_electron[m], u[p])
+                u_new[0] += contract("ijr,jr->ir", V_d_electron[m], u[0])
             else:
-                u_new[p] += 2 * contract("ijr,jr->ir", V_d_electron[m], u[p])
+                u_new[0] += 2 * contract("ijr,jr->ir", V_d_electron[m], u[0])
 
-                for j in range(self.n_orbs):
-                    u_new[p] -= contract("ijr,jr->ir", V_x[j, p], u_bar[j])
+                for j in range(self.n_orbs_tot):
+                    u_new[0] -= contract("ijr,jr->ir", V_x[j], u_bar[j])
 
-        if self.has_positron:
-            for p in range(self.n_orbs):
-                m = self.m_list[p]
+            if self.has_positron:
+                m = self.m_list[0]
+                u_new[0] -= contract("ijr,jr->ir", V_d_positron[m], u[0])
 
-                u_new[p] -= contract("ijr,jr->ir", V_d_positron[m], u[p])
-
-            u_new[-1] -= 2 * contract("ijr,jr->ir", V_d_electron[0], u[-1])
+        else:
+            u_new[0] -= 2 * contract("ijr,jr->ir", V_d_electron[0], u[0])
 
         return u_new.ravel() if ravel else u_new
 

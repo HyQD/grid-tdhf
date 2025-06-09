@@ -13,6 +13,7 @@ REQUIRED_IMAG_TIME_PROPAGATION_PARAMS = {
     "dt",
     "n_orbs",
     "m_list",
+    "has_positron",
     "weights",
     "max_iter",
     "conv_tol",
@@ -28,6 +29,7 @@ def run_imag_time_propagation(
     dt,
     n_orbs,
     m_list,
+    has_positron,
     weights,
     max_iter,
     conv_tol,
@@ -44,7 +46,7 @@ def run_imag_time_propagation(
     for i in range(max_iter):
         u = integrator(u, 0, dt, rhs)
 
-        u[:n_orbs] = orthonormalize_set(u[:n_orbs], m_list, weights)
+        u = orthonormalize_set(u, m_list, has_positron, weights)
 
         potential_computer.set_state(u)
         potential_computer.compute_direct_potential()
@@ -67,10 +69,16 @@ def run_imag_time_propagation(
     return u
 
 
-def orthonormalize_set(u, m_list, weights):
+def orthonormalize_set(u, m_list, has_positron, weights):
     u_new = np.zeros_like(u, dtype=np.complex128)
 
-    n_orbs = u.shape[0]
+    if has_positron:
+        u_new[-1] = u[-1]
+        norm = compute_overlap0(u_new[-1], u_new[-1], weights)
+        u_new[-1] /= np.sqrt(norm)
+        n_orbs = u.shape[0] - 1
+    else:
+        n_orbs = u.shape[0]
 
     for i in range(n_orbs):
         u_new[i] = u[i]

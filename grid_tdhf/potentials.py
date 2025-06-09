@@ -63,24 +63,44 @@ def compute_exchange_potential(
 ):
     V_x = np.zeros((n_orbs, n_orbs, nl, nl, nr), dtype=np.complex128)
 
+    for p in range(n_orbs):
+        mp = m_list[p]
+        V_x[:, p, :, :, :] = compute_exchange_potential_for_orbital(
+            u_bar,
+            u_tilde[p],
+            n_orbs,
+            nl,
+            nr,
+            m_list,
+            mp,
+            poisson_inverse,
+            gaunt_dict,
+        )
+
+    return V_x
+
+
+def compute_exchange_potential_for_orbital(
+    u_bar, u_tilde_p, n_orbs, nl, nr, m_list, m, poisson_inverse, gaunt_dict
+):
+    V_x = np.zeros((n_orbs, nl, nl, nr), dtype=np.complex128)
+
     for j in range(n_orbs):
-        for p in range(n_orbs):
-            mj = m_list[j]
-            mp = m_list[p]
-            g_mat1 = gaunt_dict[(mj, mp)]
-            g_mat2 = gaunt_dict[(mp, mj)]
-            V_x[j, p, :, :, :] = (
-                4
-                * (-1) ** (mj - mp)
-                * np.pi
-                * contract(
-                    "Lsr, mr, nr, mLn, oLl -> ols",
-                    poisson_inverse,
-                    u_bar[j].conj(),
-                    u_tilde[p],
-                    g_mat1,
-                    g_mat2,
-                )
+        mj = m_list[j]
+        g_mat1 = gaunt_dict[(mj, m)]
+        g_mat2 = gaunt_dict[(m, mj)]
+        V_x[j, :, :, :] = (
+            4
+            * (-1) ** (mj - m)
+            * np.pi
+            * contract(
+                "Lsr, mr, nr, mLn, oLl -> ols",
+                poisson_inverse,
+                u_bar[j].conj(),
+                u_tilde_p,
+                g_mat1,
+                g_mat2,
             )
+        )
 
     return V_x

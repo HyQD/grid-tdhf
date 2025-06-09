@@ -9,6 +9,7 @@ setup(
     entry_points={
         "console_scripts": [
             "grid-tdhf = grid_tdhf.run:main",
+            "grid-tdhf-mpi = grid_tdhf.parallel.run:main",
         ]
     },
     install_requires=[
