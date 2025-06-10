@@ -21,6 +21,8 @@ from grid_tdhf.setup.init_guess import generate_init_guess
 
 
 def setup_init_state(comm, system_config, used_inputs=None):
+    rank = comm.Get_rank()
+
     load_run = system_config.load_run
     init_state = system_config.init_state
 
@@ -35,6 +37,9 @@ def setup_init_state(comm, system_config, used_inputs=None):
 
     else:
         init_u = load_state(system_config.init_state_file)
+
+    if system_config.save_gs and rank == 0:
+        save_gs(system_config, init_u)
 
     N_orbs_tot = system_config.N_orbs_tot
     nl = system_config.nl
@@ -101,3 +106,23 @@ def setup_imag_time_propagation(comm, system_config, used_inputs=None):
         potential_computer=potential_computer,
         properties_computer=properties_computer,
     )
+
+
+def save_gs(system_config, u):
+    import uuid
+
+    fileroot = str(uuid.uuid4())
+
+    inputs = {
+        "atom": system_config.atom,
+        "N": system_config.nr,
+        "r_max": system_config.r_max,
+        "init_state": system_config.init_state,
+        "itp_dt": system_config.itp_dt,
+        "itp_conv_tol": system_config.itp_conv_tol,
+    }
+
+    info = {"inputs": inputs}
+
+    np.save(f"output_gs/{fileroot}_gs", u)
+    np.savez(f"output_gs/{fileroot}_info", **info)

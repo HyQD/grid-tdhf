@@ -177,6 +177,14 @@ def parse_arguments(verbose=True):
         help="",
     )
     parser.add_argument(
+        "--save-gs",
+        dest="save_gs",
+        type=str2bool,
+        nargs="?",
+        const=True,
+        help="",
+    )
+    parser.add_argument(
         "-n-scf-iter",
         "-n_scf_iter",
         dest="n_scf_iter",
