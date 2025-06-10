@@ -11,7 +11,7 @@ from grid_tdhf.parallel.time_propagation.imag import (
 from grid_tdhf.utils import select_keys, resolve_required_params
 
 from grid_tdhf.setup.integrator import setup_integrator
-from grid_tdhf.setup.rhs import setup_rhs
+from grid_tdhf.parallel.setup.rhs import setup_rhs
 from grid_tdhf.parallel.computers.potential_computer import PotentialComputer
 from grid_tdhf.parallel.computers.properties_computer import PropertiesComputer
 from grid_tdhf.setup.load_run import load_state

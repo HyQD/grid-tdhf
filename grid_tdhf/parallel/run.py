@@ -14,7 +14,7 @@ from grid_tdhf.setup.radial import setup_radial_arrays
 from grid_tdhf.setup.auxiliary_arrays import setup_auxiliary_arrays
 from grid_tdhf.setup.laser import setup_laser
 from grid_tdhf.parallel.setup.init_state import setup_init_state
-from grid_tdhf.setup.rhs import setup_rhs
+from grid_tdhf.parallel.setup.rhs import setup_rhs
 from grid_tdhf.parallel.computers.potential_computer import PotentialComputer
 from grid_tdhf.parallel.computers.properties_computer import PropertiesComputer
 from grid_tdhf.setup.integrator import setup_integrator

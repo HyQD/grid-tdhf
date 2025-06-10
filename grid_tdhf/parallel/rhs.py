@@ -143,6 +143,7 @@ class RHSDipoleVelocityGauge:
         "D1",
         "m_list",
         "has_positron",
+        "is_positron",
     }
 
     def __init__(
@@ -157,6 +158,7 @@ class RHSDipoleVelocityGauge:
         D1,
         m_list,
         has_positron=False,
+        is_positron=False,
     ):
         self.n_orbs = n_orbs
         self.nl = nl
@@ -168,26 +170,27 @@ class RHSDipoleVelocityGauge:
         self.r_inv = 1 / r
         self.m_list = m_list
         self.has_positron = has_positron
+        self.is_positron = is_positron
         self.N_orbs = n_orbs + 1 if has_positron else n_orbs
 
     def __call__(self, u, t, ravel=True):
-        u = u.reshape(self.N_orbs, self.nl, self.nr)
-        u_new = np.zeros((self.N_orbs, self.nl, self.nr), dtype=np.complex128)
+        u = u.reshape(1, self.nl, self.nr)
+        u_new = np.zeros((1, self.nl, self.nr), dtype=np.complex128)
 
-        for p in range(self.n_orbs):
-            m = self.m_list[p]
+        if not self.is_positron:
+            m = self.m_list[0]
 
-            du_dr = contract("ij, Ij->Ii", self.D1, u[p])
+            du_dr = contract("ij, Ij->Ii", self.D1, u[0])
 
-            u_new[p] = self.laser(t) * pz_psi(
-                u[p], du_dr, self.z_Omega[m], self.H_z_beta[m], self.r_inv
+            u_new[0] = self.laser(t) * pz_psi(
+                u[0], du_dr, self.z_Omega[m], self.H_z_beta[m], self.r_inv
             )
 
-        if self.has_positron:
-            du_dr = contract("ij, Ij->Ii", self.D1, u[-1])
+        else:
+            du_dr = contract("ij, Ij->Ii", self.D1, u[0])
 
-            u_new[-1] = -self.laser(t) * pz_psi(
-                u[-1], du_dr, self.z_Omega[0], self.H_z_beta[0], self.r_inv
+            u_new[0] = -self.laser(t) * pz_psi(
+                u[0], du_dr, self.z_Omega[0], self.H_z_beta[0], self.r_inv
             )
 
         return u_new.ravel() if ravel else u_new
@@ -203,6 +206,7 @@ class RHSDipoleLengthGauge:
         "r",
         "m_list",
         "has_positron",
+        "is_positron",
     }
 
     def __init__(
@@ -215,6 +219,7 @@ class RHSDipoleLengthGauge:
         r,
         m_list,
         has_positron=False,
+        is_positron=False,
     ):
         self.n_orbs = n_orbs
         self.nl = nl
@@ -224,20 +229,21 @@ class RHSDipoleLengthGauge:
         self.r = r
         self.m_list = m_list
         self.has_positron = has_positron
+        self.is_positron = is_positron
         self.N_orbs = n_orbs + 1 if has_positron else n_orbs
 
     def __call__(self, u, t, ravel=True):
         u = u.reshape(self.N_orbs, self.nl, self.nr)
         u_new = np.zeros((self.N_orbs, self.nl, self.nr), dtype=np.complex128)
 
-        for p in range(self.n_orbs):
-            m = self.m_list[p]
+        if not self.is_positron:
+            m = self.m_list[0]
 
-            u_temp = contract("IJ, Jk->Ik", self.z_Omega[m], u[p])
-            u_new[p] += self.laser(t) * contract("Ik, k->Ik", u_temp, self.r)
+            u_temp = contract("IJ, Jk->Ik", self.z_Omega[m], u[0])
+            u_new[0] += self.laser(t) * contract("Ik, k->Ik", u_temp, self.r)
 
-        if self.has_positron:
-            u_temp = contract("IJ, Jk->Ik", self.z_Omega[0], u[-1])
-            u_new[-1] -= self.laser(t) * contract("Ik, k->Ik", u_temp, self.r)
+        else:
+            u_temp = contract("IJ, Jk->Ik", self.z_Omega[0], u[0])
+            u_new[0] -= self.laser(t) * contract("Ik, k->Ik", u_temp, self.r)
 
         return u_new.ravel() if ravel else u_new
