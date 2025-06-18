@@ -47,10 +47,12 @@ def main():
     overrides = {**simulation_overrides, **freeze_overrides}
     simulation_config = generate_runtime_config(system_config, overrides)
 
-    integrator = setup_integrator(simulation_config, used_inputs=used_inputs)
-
     potential_computer = PotentialComputer(simulation_config)
     properties_computer = PropertiesComputer(simulation_config, potential_computer)
+
+    integrator = setup_integrator(
+        simulation_config, potential_computer, used_inputs=used_inputs
+    )
 
     laser = setup_laser(simulation_config, used_inputs=used_inputs)
     rhs = setup_rhs(

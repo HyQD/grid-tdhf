@@ -79,15 +79,16 @@ def setup_imag_time_propagation(system_config, used_inputs=None):
     overrides = get_imag_time_overrides(u, system_config)
     imag_time_config = generate_runtime_config(system_config, overrides)
 
+    potential_computer = PotentialComputer(imag_time_config)
+    properties_computer = PropertiesComputer(imag_time_config, potential_computer)
+
     integrator = setup_integrator(
         imag_time_config,
+        potential_computer,
         imaginary=True,
         used_inputs=used_inputs,
         param_mapping=param_mapping,
     )
-
-    potential_computer = PotentialComputer(imag_time_config)
-    properties_computer = PropertiesComputer(imag_time_config, potential_computer)
 
     rhs = setup_rhs(imag_time_config, potential_computer)
 
@@ -112,7 +113,7 @@ def save_gs(system_config, u):
 
     inputs = {
         "atom": system_config.atom,
-        "N": system_config.nr,
+        "N": system_config.N,
         "r_max": system_config.r_max,
         "init_state": system_config.init_state,
         "itp_dt": system_config.itp_dt,

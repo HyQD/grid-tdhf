@@ -11,7 +11,6 @@ from grid_tdhf.constants import LASER_GROUPS
 
 
 def run_simulation(
-    comm,
     integrator,
     rhs,
     mask,
@@ -31,7 +30,6 @@ def run_simulation(
 
     run_time_propagation(
         **simulation_params,
-        comm=comm,
         integrator=integrator,
         rhs=rhs,
         mask=mask,

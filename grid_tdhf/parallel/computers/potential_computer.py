@@ -8,10 +8,7 @@ from grid_tdhf.potentials import (
 
 
 class PotentialComputer:
-    def __init__(self, comm, simulation_config):
-        rank = comm.Get_rank()
-        self.rank = rank
-
+    def __init__(self, simulation_config):
         self.n_orbs_tot = simulation_config.n_orbs_tot
         self.nl = simulation_config.nl
         self.nr = simulation_config.nr

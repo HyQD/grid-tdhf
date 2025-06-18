@@ -33,7 +33,7 @@ def setup_cn(
     param_mapping=None,
     potential_computer=None,
 ):
-    from grid_tdhf.integrators import CN
+    from grid_tdhf.parallel.integrators import CN
 
     preconditioner = setup_preconditioner(
         runtime_config,
@@ -61,7 +61,7 @@ def setup_cncmf2(
     param_mapping=None,
     potential_computer=None,
 ):
-    from grid_tdhf.integrators import CNCMF2
+    from grid_tdhf.parallel.integrators import CNCMF2
 
     half_dt_config = generate_runtime_config(
         runtime_config, {"dt": runtime_config.dt / 2}

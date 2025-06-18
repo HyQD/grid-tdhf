@@ -225,9 +225,9 @@ def parse_arguments(verbose=True):
         help="",
     )
     parser.add_argument(
-        "-BICGSTAB-tol",
-        "-BICGSTAB_tol",
-        dest="BICGSTAB_tol",
+        "-bicgstab-tol",
+        "-bicgstab_tol",
+        dest="bicgstab_tol",
         type=float,
         default=1e-12,
         help="",

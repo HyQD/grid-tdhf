@@ -26,6 +26,7 @@ def get_mpi_overrides(comm, system_config):
             "m_list": [m_list[rank]],
             "m_list_tot": m_list,
             "active_orbitals": np.ones(size, dtype=bool),
+            "comm": comm,
         }
     )
 

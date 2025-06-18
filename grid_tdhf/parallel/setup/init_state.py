@@ -20,7 +20,8 @@ from grid_tdhf.config.imag_time import get_imag_time_overrides
 from grid_tdhf.setup.init_guess import generate_init_guess
 
 
-def setup_init_state(comm, system_config, used_inputs=None):
+def setup_init_state(system_config, used_inputs=None):
+    comm = system_config.comm
     rank = comm.Get_rank()
 
     load_run = system_config.load_run
@@ -33,7 +34,7 @@ def setup_init_state(comm, system_config, used_inputs=None):
         init_u = setup_scf(system_config, used_inputs)
 
     elif init_state.lower() == "itp":
-        init_u = setup_imag_time_propagation(comm, system_config, used_inputs)
+        init_u = setup_imag_time_propagation(system_config, used_inputs)
 
     else:
         init_u = load_state(system_config.init_state_file)
@@ -69,7 +70,7 @@ def setup_scf(system_config, used_inputs=None):
     return run_scf(**scf_params, u=u)
 
 
-def setup_imag_time_propagation(comm, system_config, used_inputs=None):
+def setup_imag_time_propagation(system_config, used_inputs=None):
     param_mapping = {
         "dt": "itp_dt",
         "conv_tol": "itp_conv_tol",
@@ -81,15 +82,16 @@ def setup_imag_time_propagation(comm, system_config, used_inputs=None):
     overrides = get_imag_time_overrides(u, system_config)
     imag_time_config = generate_runtime_config(system_config, overrides)
 
+    potential_computer = PotentialComputer(imag_time_config)
+    properties_computer = PropertiesComputer(imag_time_config, potential_computer)
+
     integrator = setup_integrator(
         imag_time_config,
+        potential_computer,
         imaginary=True,
         used_inputs=used_inputs,
         param_mapping=param_mapping,
     )
-
-    potential_computer = PotentialComputer(comm, imag_time_config)
-    properties_computer = PropertiesComputer(imag_time_config, potential_computer)
 
     rhs = setup_rhs(imag_time_config, potential_computer)
 
@@ -100,7 +102,6 @@ def setup_imag_time_propagation(comm, system_config, used_inputs=None):
 
     return run_imag_time_propagation(
         **imag_time_params,
-        comm=comm,
         integrator=integrator,
         rhs=rhs,
         potential_computer=potential_computer,
@@ -115,7 +116,7 @@ def save_gs(system_config, u):
 
     inputs = {
         "atom": system_config.atom,
-        "N": system_config.nr,
+        "N": system_config.N,
         "r_max": system_config.r_max,
         "init_state": system_config.init_state,
         "itp_dt": system_config.itp_dt,

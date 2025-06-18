@@ -6,6 +6,7 @@ from collections import defaultdict
 
 class Sampler:
     required_params = {
+        "comm",
         "properties_computer",
         "sample_expec_z",
         "expec_z_sample_interval",
@@ -20,6 +21,7 @@ class Sampler:
     def __init__(
         self,
         *,
+        comm,
         properties_computer,
         sample_expec_z,
         expec_z_sample_interval,
@@ -30,6 +32,8 @@ class Sampler:
         sample_state,
         state_sample_interval,
     ):
+        self.comm = comm
+
         self.properties_computer = properties_computer
 
         self.sample_expec_z = sample_expec_z
@@ -46,8 +50,10 @@ class Sampler:
         self.state_time_points = []
 
     def sample(self, state, t, count):
-        comm = MPI.COMM_WORLD
+        comm = self.comm
         rank = comm.Get_rank()
+
+        print("sampling", rank, t, count)
 
         if self.sample_expec_z and not (count % self.expec_z_sample_interval):
             local_z = self.properties_computer.compute_expec_z(state)

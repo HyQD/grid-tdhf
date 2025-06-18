@@ -47,7 +47,13 @@ def run_time_propagation(
     if init_step == 0 and rank == 0:
         checkpoint_manager.checkpoint(u, t, 0)
 
-    for i in range(init_step, total_steps):
+    tqdm_range = (
+        tqdm.tqdm(range(init_step, total_steps))
+        if rank == 0
+        else range(init_step, total_steps)
+    )
+
+    for i in tqdm_range:
         potential_computer.set_state(global_u)
         potential_computer.compute_direct_potential()
 

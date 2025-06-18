@@ -17,8 +17,8 @@ from grid_tdhf.parallel.setup.init_state import setup_init_state
 from grid_tdhf.parallel.setup.rhs import setup_rhs
 from grid_tdhf.parallel.computers.potential_computer import PotentialComputer
 from grid_tdhf.parallel.computers.properties_computer import PropertiesComputer
-from grid_tdhf.setup.integrator import setup_integrator
-from grid_tdhf.setup.sampler import setup_sampler
+from grid_tdhf.parallel.setup.integrator import setup_integrator
+from grid_tdhf.parallel.setup.sampler import setup_sampler
 from grid_tdhf.parallel.setup.simulation import setup_simulation, run_simulation
 from grid_tdhf.setup.mask import setup_mask
 from grid_tdhf.setup.checkpoint_manager import setup_checkpoint_manager
@@ -51,7 +51,7 @@ def main():
     mpi_overrides = get_mpi_overrides(comm, system_config)
     mpi_config = generate_runtime_config(system_config, mpi_overrides)
 
-    u = setup_init_state(comm, mpi_config, used_inputs)
+    u = setup_init_state(mpi_config, used_inputs)
 
     if inputs.gs_only:
         return
@@ -61,10 +61,12 @@ def main():
     overrides = {**simulation_overrides, **freeze_overrides, **mpi_overrides}
     simulation_config = generate_runtime_config(mpi_config, overrides)
 
-    integrator = setup_integrator(simulation_config, used_inputs=used_inputs)
-
-    potential_computer = PotentialComputer(comm, simulation_config)
+    potential_computer = PotentialComputer(simulation_config)
     properties_computer = PropertiesComputer(simulation_config, potential_computer)
+
+    integrator = setup_integrator(
+        simulation_config, potential_computer, used_inputs=used_inputs
+    )
 
     laser = setup_laser(simulation_config, used_inputs=used_inputs)
     rhs = setup_rhs(
@@ -86,7 +88,6 @@ def main():
         )
 
     run_simulation(
-        comm,
         integrator,
         rhs,
         mask,

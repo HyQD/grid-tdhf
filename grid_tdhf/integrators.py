@@ -10,15 +10,15 @@ class CN:
         "nl",
         "nr",
         "preconditioner",
-        "BICGSTAB_tol",
+        "bicgstab_tol",
         "imaginary",
     }
 
-    def __init__(self, N_orbs, nl, nr, preconditioner, BICGSTAB_tol, imaginary=False):
+    def __init__(self, N_orbs, nl, nr, preconditioner, bicgstab_tol, imaginary=False):
         self.N_orbs = N_orbs
         self.nl = nl
         self.nr = nr
-        self.tol = BICGSTAB_tol
+        self.tol = bicgstab_tol
         self.preconditioner = preconditioner
         self.time_factor = 1 if imaginary else 1j
 
@@ -56,5 +56,62 @@ class CN:
             raise ConvergenceError("BICGSTAB did not converge")
 
         u = u.reshape((N_orbs, nl, nr))
+
+        return u
+
+
+class CNCMF2:
+    required_params = {
+        "N_orbs",
+        "nl",
+        "nr",
+        "preconditioner",
+        "bicgstab_tol",
+        "potential_computer",
+        "imaginary",
+    }
+
+    def __init__(
+        self,
+        N_orbs,
+        nl,
+        nr,
+        preconditioner,
+        bicgstab_tol,
+        potential_computer,
+        imaginary=False,
+    ):
+        integrator1 = CN(
+            N_orbs, nl, nr, preconditioner, bicgstab_tol, imaginary=imaginary
+        )
+
+        integrator2 = CN(
+            N_orbs, nl, nr, preconditioner, bicgstab_tol, imaginary=imaginary
+        )
+
+        self.integrator = _MidpointMeanFieldIntegrator(
+            integrator=integrator1,
+            half_step_integrator=integrator2,
+            potential_computer=potential_computer,
+        )
+
+    def __call__(self, u, t, dt, rhs):
+        return self.integrator(u, t, dt, rhs)
+
+
+class _MidpointMeanFieldIntegrator:
+    def __init__(self, integrator, half_step_integrator, potential_computer):
+        self.integrator = integrator
+        self.half_step_integrator = half_step_integrator
+        self.potential_computer = potential_computer
+
+    def __call__(self, u, t, dt, rhs):
+        u_temp = self.half_step_integrator(u, t, dt / 2, rhs)
+
+        self.potential_computer.set_state(u_temp)
+        self.potential_computer.compute_direct_potential()
+
+        u = self.integrator(u, t, dt / 2, rhs)
+        u = self.integrator(u, t + dt / 2, dt / 2, rhs)
 
         return u
