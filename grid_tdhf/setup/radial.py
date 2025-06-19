@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from grid_methods.spherical_coordinates.gauss_legendre_lobatto import (
+from grid_methods.pseudospectral_grids.gauss_legendre_lobatto import (
     GaussLegendreLobatto,
     Linear_map,
 )
