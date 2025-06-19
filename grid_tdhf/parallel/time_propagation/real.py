@@ -72,7 +72,6 @@ def run_time_propagation(
 
         if rank == 0:
             checkpoint_manager.checkpoint(global_u, t, i + 1)
-            print(f"{i} / {total_steps}")
 
     if rank == 0:
         checkpoint_manager.finalize(global_u, t, i)

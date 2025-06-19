@@ -53,8 +53,6 @@ class Sampler:
         comm = self.comm
         rank = comm.Get_rank()
 
-        print("sampling", rank, t, count)
-
         if self.sample_expec_z and not (count % self.expec_z_sample_interval):
             local_z = self.properties_computer.compute_expec_z(state)
             global_z = comm.allgather(local_z[0])
