@@ -83,7 +83,7 @@ class Sampler:
                 self.samples["energy_time_points"].append(t)
 
         if self.sample_state and not (count % self.state_sample_interval):
-            full_state = gather_full_state(state, comm)
+            full_state = self.gather_full_state(state, comm)
             if rank == 0:
                 self.sampled_states.append(full_state.copy())
                 self.state_time_points.append(t)
@@ -91,12 +91,12 @@ class Sampler:
         if rank == 0:
             self.samples["time_points"].append(t)
 
-    def gather_full_state(local_state, comm):
+    def gather_full_state(self, local_state, comm):
         rank = comm.Get_rank()
         size = comm.Get_size()
 
-        nl, nr = local_state.shape[1]
-        local_state.shape[2]
+        nl = local_state.shape[1]
+        nr = local_state.shape[2]
 
         if rank == 0:
             global_state = np.empty((size, nl, nr), dtype=np.complex128)
