@@ -2,6 +2,11 @@ from grid_tdhf.exceptions import ConvergenceError
 from grid_methods.spherical_coordinates.utils import Counter
 
 from scipy.sparse.linalg import LinearOperator, bicgstab
+import scipy
+
+from packaging import version
+
+SCIPY_VERSION = version.parse(scipy.__version__)
 
 
 class CN:
@@ -18,15 +23,18 @@ class CN:
         self.N_orbs = N_orbs
         self.nl = nl
         self.nr = nr
-        self.tol = bicgstab_tol
         self.preconditioner = preconditioner
         self.time_factor = 1 if imaginary else 1j
+
+        if SCIPY_VERSION >= version.parse("1.12.0"):
+            self.tol_kwargs = {"rtol": bicgstab_tol, "atol": 0.0}
+        else:
+            self.tol_kwargs = {"tol": bicgstab_tol}
 
     def __call__(self, u, t, dt, rhs):
         ti = t + dt / 2
 
         time_factor = self.time_factor
-        tol = self.tol
         preconditioner = self.preconditioner
 
         N_orbs = self.N_orbs
@@ -47,9 +55,8 @@ class CN:
             z,
             M=preconditioner,
             x0=u.ravel(),
-            rtol=tol,
-            atol=tol,
             callback=local_counter,
+            **self.tol_kwargs,
         )
 
         if info != 0:
