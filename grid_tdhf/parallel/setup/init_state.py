@@ -8,9 +8,9 @@ from grid_tdhf.parallel.time_propagation.imag import (
     REQUIRED_IMAG_TIME_PROPAGATION_PARAMS,
 )
 
-from grid_tdhf.utils import select_keys, resolve_required_params
+from grid_tdhf.utils import resolve_required_params
 
-from grid_tdhf.setup.integrator import setup_integrator
+from grid_tdhf.parallel.setup.integrator import setup_integrator
 from grid_tdhf.parallel.setup.rhs import setup_rhs
 from grid_tdhf.parallel.computers.potential_computer import PotentialComputer
 from grid_tdhf.parallel.computers.properties_computer import PropertiesComputer
