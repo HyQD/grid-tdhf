@@ -23,6 +23,7 @@ def get_imag_time_overrides(u, system_config):
         "centrifugal_potential_l": centrifugal_potential_l,
         "poisson_inverse": poisson_inverse,
         "gaunt_dict": gaunt_dict,
+        "integrator_name": system_config.itp_integrator_name,
     }
 
     return overrides

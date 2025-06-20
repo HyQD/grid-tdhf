@@ -201,6 +201,14 @@ def parse_arguments(verbose=True):
         help="",
     )
     parser.add_argument(
+        "-itp-integrator-name",
+        "-itp_integrator_name",
+        dest="itp_integrator_name",
+        type=str,
+        default="CN",
+        help="",
+    )
+    parser.add_argument(
         "-itp-conv-tol",
         "-itp_conv_tol",
         dest="itp_conv_tol",
