@@ -30,13 +30,12 @@ from grid_tdhf.config.system import (
 from grid_tdhf.config.simulation import get_simulation_overrides
 from grid_tdhf.config.freeze import get_freeze_overrides
 from grid_tdhf.parallel.config.mpi import get_mpi_overrides
+from grid_tdhf.config.io import get_io_overrides
 
 
 def main():
     inputs = parse_arguments(verbose=False)
     used_inputs = set()
-
-    fileroot = inputs.load_run if inputs.load_run is not None else str(uuid.uuid4())
 
     system_info = get_atomic_system_params(inputs)
 
@@ -48,8 +47,11 @@ def main():
         inputs, system_info, angular_arrays, radial_arrays, aux_arrays
     )
 
-    mpi_overrides = get_mpi_overrides(comm, system_config)
-    mpi_config = generate_runtime_config(system_config, mpi_overrides)
+    io_overrides = get_io_overrides(system_config)
+    runtime_config = generate_runtime_config(system_config, io_overrides)
+
+    mpi_overrides = get_mpi_overrides(comm, runtime_config)
+    mpi_config = generate_runtime_config(runtime_config, mpi_overrides)
 
     u = setup_init_state(mpi_config, used_inputs)
 
@@ -79,7 +81,7 @@ def main():
 
     sampler = setup_sampler(simulation_config, properties_computer)
     checkpoint_manager = setup_checkpoint_manager(
-        fileroot, sampler, inputs, simulation_config, simulation_info
+        sampler, inputs, simulation_config, simulation_info
     )
 
     if inputs.load_run:

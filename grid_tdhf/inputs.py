@@ -357,6 +357,20 @@ def parse_arguments(verbose=True):
         default=None,
         help="",
     )
+    parser.add_argument(
+        "--fileroot",
+        dest="fileroot",
+        type=str,
+        default=None,
+        help="",
+    )
+    parser.add_argument(
+        "--output-dir",
+        dest="output_dir",
+        type=str,
+        default=None,
+        help="",
+    )
 
     args = parser.parse_args()
 

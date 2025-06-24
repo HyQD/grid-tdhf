@@ -19,13 +19,12 @@ from grid_tdhf.setup.load_run import resume_from_checkpoint
 from grid_tdhf.config.system import generate_system_config, generate_runtime_config
 from grid_tdhf.config.simulation import get_simulation_overrides
 from grid_tdhf.config.freeze import get_freeze_overrides
+from grid_tdhf.config.io import get_io_overrides
 
 
 def main():
     inputs = parse_arguments(verbose=False)
     used_inputs = set()
-
-    fileroot = inputs.load_run if inputs.load_run is not None else str(uuid.uuid4())
 
     system_info = get_atomic_system_params(inputs)
 
@@ -37,15 +36,18 @@ def main():
         inputs, system_info, angular_arrays, radial_arrays, aux_arrays
     )
 
-    u = setup_init_state(system_config, used_inputs)
+    io_overrides = get_io_overrides(system_config)
+    runtime_config = generate_runtime_config(system_config, io_overrides)
+
+    u = setup_init_state(runtime_config, used_inputs)
 
     if inputs.gs_only:
         return
 
-    simulation_overrides = get_simulation_overrides(u, system_config)
-    freeze_overrides = get_freeze_overrides(u, system_config)
+    simulation_overrides = get_simulation_overrides(u, runtime_config)
+    freeze_overrides = get_freeze_overrides(u, runtime_config)
     overrides = {**simulation_overrides, **freeze_overrides}
-    simulation_config = generate_runtime_config(system_config, overrides)
+    simulation_config = generate_runtime_config(runtime_config, overrides)
 
     potential_computer = PotentialComputer(simulation_config)
     properties_computer = PropertiesComputer(simulation_config, potential_computer)
@@ -65,7 +67,7 @@ def main():
 
     sampler = setup_sampler(simulation_config, properties_computer)
     checkpoint_manager = setup_checkpoint_manager(
-        fileroot, sampler, inputs, simulation_config, simulation_info
+        sampler, inputs, simulation_config, simulation_info
     )
 
     if inputs.load_run:
