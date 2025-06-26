@@ -1,5 +1,3 @@
-from grid_tdhf.potentials import compute_spherical_direct_potential
-
 import numpy as np
 
 

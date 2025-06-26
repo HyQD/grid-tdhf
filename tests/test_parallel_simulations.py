@@ -4,7 +4,7 @@ import numpy as np
 from pathlib import Path
 
 try:
-    import mpi4py
+    import mpi4py  # noqa: F401
 except ImportError:
     pytest.skip("Parallel testing requires mpi4py", allow_module_level=True)
 

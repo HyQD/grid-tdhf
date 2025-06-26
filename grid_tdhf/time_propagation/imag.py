@@ -1,5 +1,3 @@
-import tqdm
-
 import numpy as np
 
 from opt_einsum import contract

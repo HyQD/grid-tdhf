@@ -1,5 +1,3 @@
-import uuid
-
 from grid_tdhf.inputs import parse_arguments
 from grid_tdhf.setup.system_info import get_atomic_system_params
 from grid_tdhf.setup.angular import setup_angular_arrays

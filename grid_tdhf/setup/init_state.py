@@ -1,6 +1,5 @@
 import numpy as np
 
-from types import SimpleNamespace
 
 from grid_tdhf.scf import run_scf, REQUIRED_SCF_PARAMS
 from grid_tdhf.time_propagation.imag import (
@@ -8,7 +7,7 @@ from grid_tdhf.time_propagation.imag import (
     REQUIRED_IMAG_TIME_PROPAGATION_PARAMS,
 )
 
-from grid_tdhf.utils import select_keys, resolve_required_params
+from grid_tdhf.utils import resolve_required_params
 
 from grid_tdhf.setup.integrator import setup_integrator
 from grid_tdhf.setup.rhs import setup_rhs

@@ -1,6 +1,5 @@
 import numpy as np
 
-from types import SimpleNamespace
 
 from grid_tdhf.scf import run_scf, REQUIRED_SCF_PARAMS
 from grid_tdhf.parallel.time_propagation.imag import (

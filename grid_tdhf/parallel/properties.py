@@ -1,8 +1,6 @@
 import numpy as np
 from opt_einsum import contract
 
-from grid_methods.spherical_coordinates.utils import quadrature
-
 
 def compute_norm(u, weights):
     return contract("plr,plr->p", weights * u.conj(), u)

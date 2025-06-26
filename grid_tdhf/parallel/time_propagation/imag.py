@@ -1,6 +1,5 @@
 from mpi4py import MPI
 
-import tqdm
 import numpy as np
 from opt_einsum import contract
 

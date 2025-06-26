@@ -1,5 +1,3 @@
-import importlib
-
 from grid_tdhf.utils import resolve_required_params
 from grid_tdhf.setup.preconditioner import setup_preconditioner
 

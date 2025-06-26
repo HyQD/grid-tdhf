@@ -1,6 +1,3 @@
-import numpy as np
-from opt_einsum import contract
-
 from grid_tdhf.potentials import (
     compute_direct_potential,
     compute_exchange_potential_for_orbital,
