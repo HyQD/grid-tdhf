@@ -73,7 +73,7 @@ def parse_arguments(verbose=True):
         "-ncycles_after_pulse",
         dest="ncycles_after_pulse",
         type=float,
-        default=1,
+        default=0,
         help="",
     )
     parser.add_argument(
