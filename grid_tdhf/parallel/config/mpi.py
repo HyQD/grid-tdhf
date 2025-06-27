@@ -9,7 +9,11 @@ def get_mpi_overrides(comm, system_config):
 
     m_list = system_config.m_list
     has_positron = system_config.has_positron
-    is_positron = True if rank == size - 1 and has_positron else False
+
+    if system_config.frozen_positron:
+        is_positron = False
+    else:
+        is_positron = True if rank == size - 1 and has_positron else False
 
     n_orbs_tot = system_config.n_orbs
     N_orbs_tot = system_config.N_orbs
@@ -23,7 +27,6 @@ def get_mpi_overrides(comm, system_config):
             "is_positron": is_positron,
             "m_list": [m_list[rank]],
             "m_list_tot": m_list,
-            "active_orbitals": np.ones(size, dtype=bool),
             "comm": comm,
         }
     )
