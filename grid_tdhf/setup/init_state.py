@@ -1,5 +1,5 @@
 import numpy as np
-
+from pathlib import Path
 
 from grid_tdhf.scf import run_scf, REQUIRED_SCF_PARAMS
 from grid_tdhf.time_propagation.imag import (
@@ -106,9 +106,10 @@ def setup_imag_time_propagation(system_config, used_inputs=None):
 
 
 def save_gs(system_config, u):
-    import uuid
+    fileroot = system_config.fileroot
+    output_dir = system_config.output_dir
 
-    fileroot = str(uuid.uuid4())
+    output_prefix = f"{output_dir}/{fileroot}"
 
     inputs = {
         "atom": system_config.atom,
@@ -121,5 +122,7 @@ def save_gs(system_config, u):
 
     info = {"inputs": inputs}
 
-    np.save(f"output_gs/{fileroot}_gs", u)
-    np.savez(f"output_gs/{fileroot}_info", **info)
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
+
+    np.save(f"{output_prefix}_gs", u)
+    np.savez(f"{output_prefix}_info", **info)
