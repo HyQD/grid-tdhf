@@ -103,6 +103,14 @@ def parse_arguments(verbose=True):
         help="",
     )
     parser.add_argument(
+        "-total-time",
+        "-total_time",
+        dest="total_time",
+        type=float,
+        default=None,
+        help="",
+    )
+    parser.add_argument(
         "-laser-name",
         "-laser_name",
         dest="laser_name",
