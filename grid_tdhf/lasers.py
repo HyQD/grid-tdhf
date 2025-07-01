@@ -145,7 +145,7 @@ class TrapezoidalLaser:
 
 class DiscreteDeltaPulse:
     supported_gauges = "length"
-    required_params = {"E0", "dt", "gauge", "phase", "t0"}
+    required_params = {"E0", "dt", "gauge", "t0"}
 
     def __init__(self, *, E0, dt, gauge, t0=0.0):
         self.E0 = E0
