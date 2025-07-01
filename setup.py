@@ -14,6 +14,7 @@ setup(
     },
     install_requires=[
         "numpy",
+        "HyQD-grid-methods @ git+https://github.com/HyQD/grid-methods.git@v1.0.0",
     ],
     python_requires=">=3.7",
 )
