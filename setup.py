@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="grid_tdhf",
+    name="HyQD-grid-tdhf",
     version="1.0.0",
     description="A grid-based time-dependent Hartree-Fock code",
     packages=find_packages(),
