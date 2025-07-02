@@ -1,5 +1,5 @@
 from grid_tdhf.exceptions import ConvergenceError
-from grid_methods.spherical_coordinates.utils import Counter
+from grid_lib.spherical_coordinates.utils import Counter
 
 from scipy.sparse.linalg import LinearOperator, bicgstab
 import scipy

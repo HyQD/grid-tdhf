@@ -1,7 +1,7 @@
 import numpy as np
 from types import SimpleNamespace
 
-from grid_methods.spherical_coordinates.angular_matrix_elements import (
+from grid_lib.spherical_coordinates.angular_matrix_elements import (
     AngularMatrixElements_l,
 )
 

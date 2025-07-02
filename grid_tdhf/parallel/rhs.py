@@ -1,7 +1,7 @@
 import numpy as np
 from opt_einsum import contract
 
-from grid_methods.spherical_coordinates.Hpsi_components import pz_psi
+from grid_lib.spherical_coordinates.Hpsi_components import pz_psi
 
 
 class CompositeRHS:
