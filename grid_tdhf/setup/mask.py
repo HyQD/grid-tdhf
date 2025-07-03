@@ -5,7 +5,7 @@ from grid_tdhf.masks import MASK_REGISTRY
 def setup_mask(simulation_config, used_inputs=None, param_mapping=None):
     if param_mapping is None:
         param_mapping = {
-            "r0": "mask_r0",
+            "margin": "mask_margin",
             "n": "mask_n",
         }
 

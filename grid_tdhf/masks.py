@@ -1,8 +1,10 @@
 import numpy as np
 
 
-def cosine_mask(*, r, r_max, r0, n):
+def cosine_mask(*, r, r_max, margin, n):
     mask_r = np.zeros(len(r))
+
+    r0 = r_max - margin
 
     ind1 = r < r0
     ind2 = r == r_max
@@ -18,6 +20,6 @@ def cosine_mask(*, r, r_max, r0, n):
 MASK_REGISTRY = {
     "cosine_mask": {
         "func": cosine_mask,
-        "required_params": {"r", "r_max", "r0", "n"},
+        "required_params": {"r", "r_max", "margin", "n"},
     },
 }

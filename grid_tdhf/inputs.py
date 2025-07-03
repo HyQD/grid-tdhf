@@ -257,9 +257,9 @@ def parse_arguments(verbose=True):
         help="",
     )
     parser.add_argument(
-        "-mask-r0",
-        "-mask_r0",
-        dest="mask_r0",
+        "-mask-margin",
+        "-mask_margin",
+        dest="mask_margin",
         type=float,
         default=30,
         help="",
