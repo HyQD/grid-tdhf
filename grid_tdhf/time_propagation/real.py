@@ -40,13 +40,14 @@ def run_time_propagation(
         checkpoint_manager.checkpoint(u, t, 0)
 
     for i in tqdm.tqdm(range(init_step, total_steps)):
-        potential_computer.set_state(u)
-        potential_computer.compute_direct_potential()
-
         u = integrator(u, t, dt, rhs)
 
         if mask is not None:
             u = mask * u
+
+        potential_computer.set_state(u)
+        potential_computer.compute_direct_potential()
+        potential_computer.compute_exchange_potential(u)
 
         t += dt
 
