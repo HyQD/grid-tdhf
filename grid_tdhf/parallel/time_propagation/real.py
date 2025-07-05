@@ -54,9 +54,6 @@ def run_time_propagation(
     )
 
     for i in tqdm_range:
-        potential_computer.set_state(global_u)
-        potential_computer.compute_direct_potential()
-
         local_u = global_u[rank : rank + 1, :, :]
 
         local_u = integrator(local_u, t, dt, rhs)
@@ -65,6 +62,10 @@ def run_time_propagation(
             local_u = mask * local_u
 
         comm.Allgather([local_u, MPI.COMPLEX16], [global_u, MPI.COMPLEX16])
+
+        potential_computer.set_state(global_u)
+        potential_computer.compute_direct_potential()
+        potential_computer.compute_exchange_potential(local_u)
 
         t += dt
 
