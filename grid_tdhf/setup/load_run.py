@@ -1,7 +1,8 @@
 import numpy as np
 
 
-def resume_from_checkpoint(fileroot, simulation_info, sampler):
+def resume_from_checkpoint(simulation_config, simulation_info, sampler):
+    fileroot = simulation_config.fileroot
     _, metadata = load_info(fileroot)
 
     simulation_info.init_step = metadata["current_step"]

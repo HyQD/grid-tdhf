@@ -42,10 +42,11 @@ def run_time_propagation(
     potential_computer.compute_direct_potential()
     potential_computer.compute_exchange_potential(local_u)
 
-    sampler.sample(local_u, t, 0)
-
-    if init_step == 0 and rank == 0:
-        checkpoint_manager.checkpoint(u, t, 0)
+    if init_step == 0:
+        sampler.sample(local_u, t, 0)
+        
+        if rank == 0:
+            checkpoint_manager.checkpoint(u, t, 0)
 
     tqdm_range = (
         tqdm.tqdm(range(init_step, total_steps))

@@ -70,7 +70,7 @@ def main():
 
     if inputs.load_run:
         simulation_info, sampler = resume_from_checkpoint(
-            fileroot, simulation_info, sampler
+            simulation_config, simulation_info, sampler
         )
 
     run_simulation(
