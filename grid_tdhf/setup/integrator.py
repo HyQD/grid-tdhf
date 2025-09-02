@@ -24,7 +24,7 @@ def setup_integrator(
     )
 
 
-def setup_cn(
+def setup_cn1(
     runtime_config,
     imaginary=False,
     used_inputs=None,
@@ -52,7 +52,7 @@ def setup_cn(
     return integrator
 
 
-def setup_cncmf2(
+def setup_cn2(
     runtime_config,
     imaginary=False,
     used_inputs=None,
@@ -88,6 +88,6 @@ def setup_cncmf2(
 
 
 SETUP_DISPATCH = {
-    "CN": setup_cn,
-    "CNCMF2": setup_cncmf2,
+    "CN1": setup_cn1,
+    "CN2": setup_cn2,
 }
