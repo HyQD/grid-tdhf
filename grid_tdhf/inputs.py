@@ -153,12 +153,28 @@ def parse_arguments(verbose=True):
         help="",
     )
     parser.add_argument(
+        "-nonlin-fixing",
+        "-nonlin_fixing",
+        dest="nonlin_fixing",
+        type=str,
+        default="cdm",
+        help="cdm, cmf",
+    )
+    parser.add_argument(
+        "-hf-gauge",
+        "-hf_gauge",
+        dest="hf_gauge",
+        type=str,
+        default="canon",
+        help="canon, ortho-ff, ortho-fp",
+    )
+    parser.add_argument(
         "-integrator-name",
         "-integrator_name",
         dest="integrator_name",
         type=str,
-        default="CN",
-        help="",
+        default="CN1",
+        help="CN1, CN2",
     )
     parser.add_argument(
         "-preconditioner-name",
