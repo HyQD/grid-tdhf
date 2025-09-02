@@ -69,9 +69,6 @@ class RHSCore:
         return u_new.ravel() if ravel else u_new
 
 
-import time
-
-
 class RHSMeanField:
     required_params = {
         "potential_computer",
@@ -80,6 +77,7 @@ class RHSMeanField:
         "nr",
         "nL",
         "m_list",
+        "nonlin_fixing",
         "has_positron",
     }
 
@@ -91,6 +89,7 @@ class RHSMeanField:
         nr,
         nL,
         m_list,
+        nonlin_fixing="cdm",
         has_positron=False,
     ):
         self.potential_computer = potential_computer
@@ -99,6 +98,7 @@ class RHSMeanField:
         self.nr = nr
         self.m_list = m_list
         self.nL = nL
+        self.nonlin_fixing = nonlin_fixing
         self.has_positron = has_positron
         self.N_orbs = n_orbs + 1 if has_positron else n_orbs
         self.single_orbital = False if n_orbs > 1 else True
@@ -107,10 +107,9 @@ class RHSMeanField:
         u = u.reshape(self.N_orbs, self.nl, self.nr)
         u_new = np.zeros((self.N_orbs, self.nl, self.nr), dtype=np.complex128)
 
-        tic1 = time.time()
         if not self.single_orbital:
-            self.potential_computer.compute_exchange_potential(u)
-        tic2 = time.time()
+            if self.nonlin_fixing == "cdm":
+                self.potential_computer.compute_exchange_potential(u)
 
         V_d_electron = self.potential_computer.V_d_electron
         V_d_positron = self.potential_computer.V_d_positron
@@ -125,8 +124,13 @@ class RHSMeanField:
             else:
                 u_new[p] += 2 * contract("ijr,jr->ir", V_d_electron[m], u[p])
 
-                for j in range(self.n_orbs):
-                    u_new[p] -= contract("ijr,jr->ir", V_x[j, p], u_bar[j])
+                if self.nonlin_fixing == "cdm":
+                    for j in range(self.n_orbs):
+                        u_new[p] -= contract("ijr,jr->ir", V_x[j, p], u_bar[j])
+
+                elif self.nonlin_fixing == "cmf":
+                    for j in range(self.n_orbs):
+                        u_new[p] -= contract("ijr,jr->ir", V_x[j, p], u[j])
 
         if self.has_positron:
             for p in range(self.n_orbs):
