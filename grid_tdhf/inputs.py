@@ -351,6 +351,12 @@ def parse_arguments(verbose=True):
         help="",
     )
     parser.add_argument(
+        "-tag",
+        type=str,
+        default="",
+        help="",
+    )
+    parser.add_argument(
         "--gs-only",
         dest="gs_only",
         type=str2bool,
