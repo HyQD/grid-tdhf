@@ -41,7 +41,7 @@ def test_serial_simulation(tmp_path, atom, reference_file):
         "-gauge",
         "velocity",
         "-integrator-name",
-        "CN",
+        "IMP-CDM1",
         "-init-state",
         "scf",
         "-mask-name",

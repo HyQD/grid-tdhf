@@ -9,7 +9,7 @@ from packaging import version
 SCIPY_VERSION = version.parse(scipy.__version__)
 
 
-class CN:
+class IMPCDM1:
     required_params = {
         "N_orbs",
         "nl",
@@ -67,7 +67,7 @@ class CN:
         return u
 
 
-class CNCMF2:
+class IMPCDM2:
     required_params = {
         "N_orbs",
         "nl",
@@ -88,11 +88,11 @@ class CNCMF2:
         potential_computer,
         imaginary=False,
     ):
-        integrator1 = CN(
+        integrator1 = IMPCDM1(
             N_orbs, nl, nr, preconditioner, bicgstab_tol, imaginary=imaginary
         )
 
-        integrator2 = CN(
+        integrator2 = IMPCDM1(
             N_orbs, nl, nr, preconditioner, bicgstab_tol, imaginary=imaginary
         )
 

@@ -48,7 +48,7 @@ def test_parallel_simulation(tmp_path, atom, reference_file, n_nodes):
         "-gauge",
         "velocity",
         "-integrator-name",
-        "CN",
+        "IMP-CDM1",
         "-init-state",
         "scf",
         "-mask-name",

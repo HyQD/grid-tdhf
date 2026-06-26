@@ -24,14 +24,14 @@ def setup_integrator(
     )
 
 
-def setup_cn(
+def setup_imp_cdm1(
     runtime_config,
     imaginary=False,
     used_inputs=None,
     param_mapping=None,
     potential_computer=None,
 ):
-    from grid_tdhf.integrators import CN
+    from grid_tdhf.integrators import IMPCDM1
 
     preconditioner = setup_preconditioner(
         runtime_config,
@@ -42,24 +42,24 @@ def setup_cn(
 
     args = {**vars(runtime_config)}
     integrator_args = resolve_required_params(
-        CN.required_params, args, used_inputs, param_mapping
+        IMPCDM1.required_params, args, used_inputs, param_mapping
     )
 
-    integrator = CN(
+    integrator = IMPCDM1(
         **integrator_args, imaginary=imaginary, preconditioner=preconditioner
     )
 
     return integrator
 
 
-def setup_cncmf2(
+def setup_imp_cdm2(
     runtime_config,
     imaginary=False,
     used_inputs=None,
     param_mapping=None,
     potential_computer=None,
 ):
-    from grid_tdhf.integrators import CNCMF2
+    from grid_tdhf.integrators import IMPCDM2
 
     half_dt_config = generate_runtime_config(
         runtime_config, {"dt": runtime_config.dt / 2}
@@ -74,10 +74,10 @@ def setup_cncmf2(
 
     args = {**vars(runtime_config)}
     integrator_args = resolve_required_params(
-        CNCMF2.required_params, args, used_inputs, param_mapping
+        IMPCDM2.required_params, args, used_inputs, param_mapping
     )
 
-    integrator = CNCMF2(
+    integrator = IMPCDM2(
         **integrator_args,
         imaginary=imaginary,
         preconditioner=preconditioner,
@@ -88,6 +88,6 @@ def setup_cncmf2(
 
 
 SETUP_DISPATCH = {
-    "CN": setup_cn,
-    "CNCMF2": setup_cncmf2,
+    "IMP-CDM1": setup_imp_cdm1,
+    "IMP-CDM2": setup_imp_cdm2,
 }
