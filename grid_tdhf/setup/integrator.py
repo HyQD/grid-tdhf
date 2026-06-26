@@ -87,7 +87,41 @@ def setup_imp_cdm2(
     return integrator
 
 
+def setup_imp_scf(
+    runtime_config,
+    imaginary=False,
+    used_inputs=None,
+    param_mapping=None,
+    potential_computer=None,
+):
+    from grid_tdhf.integrators import IMPSCF
+
+    dt_config = generate_runtime_config(runtime_config, {"dt": runtime_config.dt})
+
+    preconditioner = setup_preconditioner(
+        dt_config,
+        imaginary=imaginary,
+        used_inputs=used_inputs,
+        param_mapping=param_mapping,
+    )
+
+    args = {**vars(runtime_config)}
+    integrator_args = resolve_required_params(
+        IMPSCF.required_params, args, used_inputs, param_mapping
+    )
+
+    integrator = IMPSCF(
+        **integrator_args,
+        imaginary=imaginary,
+        preconditioner=preconditioner,
+        potential_computer=potential_computer
+    )
+
+    return integrator
+
+
 SETUP_DISPATCH = {
     "IMP-CDM1": setup_imp_cdm1,
     "IMP-CDM2": setup_imp_cdm2,
+    "IMP-SCF": setup_imp_scf,
 }

@@ -3,6 +3,7 @@ from grid_lib.spherical_coordinates.utils import Counter
 
 from scipy.sparse.linalg import LinearOperator, bicgstab
 import scipy
+import numpy as np
 
 from packaging import version
 
@@ -106,6 +107,52 @@ class IMPCDM2:
         return self.integrator(u, t, dt, rhs)
 
 
+class IMPSCF:
+    required_params = {
+        "N_orbs",
+        "nl",
+        "nr",
+        "preconditioner",
+        "m_list",
+        "has_positron",
+        "weights",
+        "bicgstab_tol",
+        "midpoint_scf_tol",
+        "potential_computer",
+        "imaginary",
+    }
+
+    def __init__(
+        self,
+        N_orbs,
+        nl,
+        nr,
+        preconditioner,
+        m_list,
+        has_positron,
+        weights,
+        bicgstab_tol,
+        midpoint_scf_tol,
+        potential_computer,
+        imaginary=False,
+    ):
+        integrator = IMPCDM1(
+            N_orbs, nl, nr, preconditioner, bicgstab_tol, imaginary=imaginary
+        )
+
+        self.integrator = _SelfConsistentMidpointMeanFieldIntegrator(
+            integrator=integrator,
+            potential_computer=potential_computer,
+            m_list=m_list,
+            has_positron=has_positron,
+            weights=weights,
+            midpoint_scf_tol=midpoint_scf_tol,
+        )
+
+    def __call__(self, u, t, dt, rhs):
+        return self.integrator(u, t, dt, rhs)
+
+
 class _MidpointMeanFieldIntegrator:
     def __init__(self, integrator, half_step_integrator, potential_computer):
         self.integrator = integrator
@@ -120,5 +167,49 @@ class _MidpointMeanFieldIntegrator:
 
         u = self.integrator(u, t, dt / 2, rhs)
         u = self.integrator(u, t + dt / 2, dt / 2, rhs)
+
+        return u
+
+
+class _SelfConsistentMidpointMeanFieldIntegrator:
+    def __init__(
+        self,
+        integrator,
+        potential_computer,
+        m_list,
+        has_positron,
+        weights,
+        midpoint_scf_tol,
+    ):
+        self.integrator = integrator
+        self.potential_computer = potential_computer
+
+        self.m_list = m_list
+        self.has_positron = has_positron
+        self.weights = weights
+        self.midpoint_scf_tol = midpoint_scf_tol
+
+    def __call__(self, u, t, dt, rhs):
+        midpoint_scf_diff = np.inf
+
+        u_midpoint_old = u.copy()
+        u_midpoint = u.copy()
+
+        while midpoint_scf_diff > self.midpoint_scf_tol:
+            self.potential_computer.set_state(u_midpoint)
+            self.potential_computer.compute_direct_potential()
+
+            u_new = self.integrator(u_midpoint, t, dt, rhs)
+
+            u_midpoint = (u_new + u) / 2
+
+            midpoint_scf_diff = np.max(np.abs(u_midpoint - u_midpoint_old))
+
+            u_midpoint_old = u_midpoint.copy()
+
+        self.potential_computer.set_state(u_midpoint)
+        self.potential_computer.compute_direct_potential()
+
+        u = self.integrator(u, t, dt, rhs)
 
         return u
