@@ -47,7 +47,15 @@ def parse_arguments(verbose=True):
     parser.add_argument(
         "-nL",
         type=int,
-        default=4,
+        default=None,
+        help="",
+    )
+    parser.add_argument(
+        "-L-max",
+        "-L_max",
+        dest="L_max",
+        type=int,
+        default=None,
         help="",
     )
     parser.add_argument(
@@ -249,6 +257,14 @@ def parse_arguments(verbose=True):
         help="",
     )
     parser.add_argument(
+        "-midpoint-scf-tol",
+        "-midpoint_scf_tol",
+        dest="midpoint_scf_tol",
+        type=float,
+        default=1e-5,
+        help="",
+    )
+    parser.add_argument(
         "-mask-name",
         "-mask_name",
         dest="mask_name",
@@ -394,6 +410,12 @@ def parse_arguments(verbose=True):
     relation = lambda a, b: a == b + 1
     inputs["nl"], inputs["l_max"] = resolve_linked_parameters(
         inputs["nl"], inputs["l_max"], default_nl, "nl", "l_max", relation
+    )
+
+    default_nL = 4
+    relation = lambda a, b: a == b + 1
+    inputs["nL"], inputs["L_max"] = resolve_linked_parameters(
+        inputs["nL"], inputs["L_max"], default_nL, "nL", "L_max", relation
     )
 
     load_run = inputs["load_run"]
