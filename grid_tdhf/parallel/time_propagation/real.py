@@ -44,7 +44,7 @@ def run_time_propagation(
 
     if init_step == 0:
         sampler.sample(local_u, t, 0)
-        
+
         if rank == 0:
             checkpoint_manager.checkpoint(u, t, 0)
 
