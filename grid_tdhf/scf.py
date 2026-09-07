@@ -342,9 +342,9 @@ def run_scf_ar(
 
         u_1s_in = u_1s_in / np.sqrt(compute_radial_norm(u_1s_in, weights)).real
         u_2s_in = u_2s_in / np.sqrt(compute_radial_norm(u_2s_in, weights)).real
-        u_3s_in = u_2s_in / np.sqrt(compute_radial_norm(u_3s_in, weights)).real
+        u_3s_in = u_3s_in / np.sqrt(compute_radial_norm(u_3s_in, weights)).real
         u_2p_in = u_2p_in / np.sqrt(compute_radial_norm(u_2p_in, weights)).real
-        u_3p_in = u_2p_in / np.sqrt(compute_radial_norm(u_3p_in, weights)).real
+        u_3p_in = u_3p_in / np.sqrt(compute_radial_norm(u_3p_in, weights)).real
 
     u = np.zeros((9, nl, nr), dtype=np.complex128)
     u[0, 0, :] = u_1s_in
