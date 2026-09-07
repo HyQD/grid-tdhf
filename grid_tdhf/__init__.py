@@ -1,6 +1,6 @@
 import grid_lib
 
-REQUIRED_GRID_METHODS_VERSION = "1.0.0"
+REQUIRED_GRID_METHODS_VERSION = "1.1.0"
 
 if getattr(grid_lib, "__version__", None) != REQUIRED_GRID_METHODS_VERSION:
     raise ImportError(

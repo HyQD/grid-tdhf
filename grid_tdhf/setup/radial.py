@@ -19,4 +19,8 @@ def setup_radial_arrays(inputs):
 
     radial_arrays = {**vars(gauss_legendre_lobatto), **vars(radial_matrix_elements)}
 
+    radial_arrays["weights"] = (
+        radial_matrix_elements.weights / radial_matrix_elements.r_dot
+    )
+
     return SimpleNamespace(**radial_arrays)

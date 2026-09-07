@@ -14,7 +14,13 @@ setup(
     },
     install_requires=[
         "numpy",
-        "HyQD-grid-lib @ git+https://github.com/HyQD/grid-lib.git@v1.0.0",
+        "scipy",
+        "sympy",
+        "opt_einsum",
+        "packaging",
+        "tqdm",
+        "numba",
+        "HyQD-grid-lib @ git+https://github.com/HyQD/grid-lib.git@main",
     ],
     python_requires=">=3.7",
 )
