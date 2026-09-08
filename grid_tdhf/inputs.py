@@ -165,7 +165,7 @@ def parse_arguments(verbose=True):
         "-integrator_name",
         dest="integrator_name",
         type=str,
-        default="IMP-CMD2",
+        default="IMP-CDM2",
         help="",
     )
     parser.add_argument(
